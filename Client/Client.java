@@ -1,6 +1,6 @@
 package Client;
 
-//import Regestry.TicTacToeAService;
+import Regestry.TicTacToeAService;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -21,11 +21,11 @@ public class Client {
 
 
             Registry registry = LocateRegistry.getRegistry("localhost", port);
-            //TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
+            TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
 
 
             // invoking the methode findGame just for test purpose
-            //ticTacToeAService.findGame("");
+            ticTacToeAService.findGame("");
 
 
             System.out.println("client ended");
