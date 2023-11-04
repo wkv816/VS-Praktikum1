@@ -13,6 +13,9 @@ public class Client {
     private static final int port = 1099;
 
     public static void main(String[] args) {
+
+        TicTacToeGame ticTacToe = new TicTacToeGame();
+
         try {
             System.out.println("client started");
 
