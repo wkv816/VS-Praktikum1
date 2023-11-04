@@ -1,11 +1,18 @@
 package Client;
+import Regestry.TicTacToeAService;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
 public class TicTacToeGame implements ActionListener{
 
-    String name = "Max";
+
+    private TicTacToeAService tttAService;
+
+    private String gameID;
+    private String name = "Max";
     String opponent_name = "Otto";
 
     Boolean scannerOn = true;
@@ -18,15 +25,10 @@ public class TicTacToeGame implements ActionListener{
     JButton[] buttons = new JButton[9];
     boolean player1_turn;
 
-    public TicTacToeGame(){
-        if(scannerOn){
-            Scanner scanner = new Scanner(System.in);  // Create a Scanner object
-            System.out.println("Enter Player 1 Name");
-            name = scanner.nextLine();
+    public TicTacToeGame(TicTacToeAService ticTacToeAService, String gameID){
 
-            System.out.println("Enter Player 2 Name");
-            opponent_name = scanner.nextLine();
-        }
+        tttAService = ticTacToeAService;
+        this.gameID = gameID;
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800,800);
@@ -74,6 +76,7 @@ public class TicTacToeGame implements ActionListener{
                         buttons[i].setText("X");
                         player1_turn = false;
                         textfield.setText((opponent_name + "'s turn"));
+                        getCordinate(i);
                         check();
                     }
                 } else{
@@ -82,6 +85,7 @@ public class TicTacToeGame implements ActionListener{
                         buttons[i].setText("O");
                         player1_turn = true;
                         textfield.setText((name + "'s turn"));
+                        getCordinate(i);
                         check();
                     }
 
@@ -89,6 +93,57 @@ public class TicTacToeGame implements ActionListener{
             }
         }
 
+    }
+
+    private void getCordinate(int c) {
+
+        int x = -1;
+        int y = -1;
+
+        switch (c){
+            case 0:
+                x=0;
+                y=0;
+                break;
+            case 1:
+                x=1;
+                y=0;
+                break;
+            case 2:
+                x=2;
+                y=0;
+                break;
+            case 3:
+                x=0;
+                y=1;
+                break;
+            case 4:
+                x=1;
+                y=1;
+                break;
+            case 5:
+                x=2;
+                y=1;
+                break;
+            case 6:
+                x=0;
+                y=2;
+                break;
+            case 7:
+                x=1;
+                y=2;
+                break;
+            case 8:
+                x=2;
+                y=2;
+                break;
+        }
+
+        try {
+            tttAService.makeMove(x,y, gameID);
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void firstPlayer (){
