@@ -4,7 +4,7 @@ import Regestry.TicTacToeAService;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class Client {
+public class Client2 {
 
     /**
      * ipaddress is used if the host and client are not in the same network.
@@ -28,7 +28,7 @@ public class Client {
 
 
             // invoking the methode findGame just for test purpose
-            System.out.println(ticTacToeAService.test("1"));
+            System.out.println(ticTacToeAService.test("2"));
 
 
             System.out.println("client ended");

@@ -136,4 +136,25 @@ public class TicTacToeAImpl implements TicTacToeAService {
         // Implement logic to signal the other player that it's their turn.
         
     }
+    
+    @Override
+    public String test(String str) throws  RemoteException{
+        System.out.println("test ausgabe" + str);
+        if(str.equals("1")){
+            System.out.println("befoore 10 sec");
+
+            try {
+                Thread.sleep(10000);
+                System.out.println("waiting 10 sec");
+            } catch(InterruptedException e){
+                e.printStackTrace();
+            }
+
+
+        }else if (str=="2"){
+
+        }
+        return "done done";
+    }
+
 }
