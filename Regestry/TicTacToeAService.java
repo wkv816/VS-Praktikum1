@@ -74,4 +74,8 @@ public interface TicTacToeAService extends Remote {
     public ArrayList<String> fullUpdate(String gameId)
             throws RemoteException;
 
+
+// for Test purposis
+    public String test(String str)
+        throws RemoteException;
 }

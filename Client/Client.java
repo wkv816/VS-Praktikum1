@@ -11,8 +11,6 @@ import java.util.Scanner;
 
 public class Client {
 
-
-
     /**
      * ipaddress is used if the host and client are not in the same network.
      */
@@ -20,6 +18,8 @@ public class Client {
     private static final int port = 1099;
 
     public static void main(String[] args) {
+
+        //TicTacToeGame ticTacToe = new TicTacToeGame();
         Boolean scannerOn = false;
         String opponent_name;
 
@@ -74,7 +74,18 @@ public class Client {
         TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
         //TicTacToeAService ticTacToeAService=null;
         GuiGame tmpTest = new GuiGame(ticTacToeAService, "gameID", "opponentName", "firstMove", "move");
+            System.out.println("client started");
 
+            // Locate the registry with the server's IP address
+            // Get the reference of the exported object from the RMI registry
+
+            //Registry registry = LocateRegistry.getRegistry("localhost", port);
+            //TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
+
+
+            // invoking the methode findGame just for test purpose
+            System.out.println(ticTacToeAService.findGame("client_1"));
+            //System.out.println(ticTacToeAService.test("1"));
         // invoking the methode findGame just for test purpose
         Map<String, String> gameMap = ticTacToeAService.findGame(name);
         String gameID = gameMap.get("Game ID");
@@ -112,6 +123,4 @@ public class Client {
 
         System.out.println("client ended");
     }
-
-
 }
