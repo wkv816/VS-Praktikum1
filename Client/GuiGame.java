@@ -6,29 +6,33 @@ import java.awt.event.*;
 import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
-public class TicTacToeGame implements ActionListener{
+public class GuiGame implements ActionListener{
 
 
     private TicTacToeAService tttAService;
-
     private String gameID;
-    private String name = "Max";
-    String opponent_name = "Otto";
+    private String name;
+    private String opponent_name = "Otto";
+    private String firstMove;
+    private String move;
 
-    Boolean scannerOn = true;
+    private Boolean scannerOn = true;
 
     private Random random =  new Random();
-    JFrame frame = new JFrame();
-    JPanel title_panel = new JPanel();
-    JPanel button_panel = new JPanel();
-    JLabel textfield = new JLabel();
-    JButton[] buttons = new JButton[9];
-    boolean player1_turn;
+    private JFrame frame = new JFrame();
+    private JPanel title_panel = new JPanel();
+    private JPanel button_panel = new JPanel();
+    private JLabel textfield = new JLabel();
+    private JButton[] buttons = new JButton[9];
+    private boolean player1_turn;
 
-    public TicTacToeGame(TicTacToeAService ticTacToeAService, String gameID){
+    public GuiGame(TicTacToeAService ticTacToeAService, String gameID, String opponentName, String firstMove, String move){
 
         tttAService = ticTacToeAService;
         this.gameID = gameID;
+        this.opponent_name = opponentName;
+        this.firstMove = firstMove;
+        this.move = move;
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800,800);
@@ -56,11 +60,22 @@ public class TicTacToeGame implements ActionListener{
             buttons[i].setFocusable(false);
             buttons[i].addActionListener(this);
         }
+
+        /*
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                buttons[i][j] = new JButton();
+                button_panel.add(buttons[i][j]);
+                buttons[i][j].setFont(new Font("MV Boli", Font.BOLD, 120));
+                buttons[i][j].setFocusable(false);
+                buttons[i][j].addActionListener(this);
+            }
+        }*/
+
         title_panel.add(textfield);
         frame.add(title_panel, BorderLayout.NORTH);
 
         frame.add(button_panel);
-
 
         firstPlayer();
 
@@ -88,11 +103,9 @@ public class TicTacToeGame implements ActionListener{
                         getCordinate(i);
                         check();
                     }
-
                 }
             }
         }
-
     }
 
     private void getCordinate(int c) {
@@ -140,7 +153,22 @@ public class TicTacToeGame implements ActionListener{
         }
 
         try {
-            tttAService.makeMove(x,y, gameID);
+            String opponentAwnser = tttAService.makeMove(x,y, gameID);
+
+            switch (opponentAwnser){
+                case "opponent_gone": // Spiel ist zu ende
+                    break;
+                case "you_win": // Spiel ist zu ende
+                case "you_lose": // Spiel ist zu ende
+                case "invalid_move":
+                default:
+                    // "x,y;
+                    char xCordinate = opponentAwnser.charAt(0);
+                    char yCordinate = opponentAwnser.charAt(2);
+
+            }
+
+            // hier muss dann auf die antwort des des gegners gewartet werden
         } catch (RemoteException ex) {
             throw new RuntimeException(ex);
         }
