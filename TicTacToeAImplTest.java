@@ -1,7 +1,7 @@
 
 import org.junit.jupiter.api.Test;
 
-import Client.TicTacToeGame;
+//import Client.TicTacToeGame;
 import Server.TicTacToeAImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,11 +18,11 @@ public class TicTacToeAImplTest {
 
         // Test a valid move for Player 1
         boolean isPlayer1Turn = true;
-        assertTrue(ticTacToe.isMoveValid(1, 0, moves, isPlayer1Turn));
+        assertTrue(ticTacToe.isMoveValid(1, 0, moves));
 
         // Test a valid move for Player 2
         isPlayer1Turn = false;
-        assertTrue(ticTacToe.isMoveValid(2, 1, moves, isPlayer1Turn));
+        assertTrue(ticTacToe.isMoveValid(2, 1, moves));
     }
 
     @Test
@@ -34,13 +34,13 @@ public class TicTacToeAImplTest {
 
         // Test an out-of-bounds move
         boolean isPlayer1Turn = true;
-        assertFalse(ticTacToe.isMoveValid(-1, 1, moves, isPlayer1Turn));
+        assertFalse(ticTacToe.isMoveValid(-1, 1, moves));
 
         // Test a move to an already occupied cell
-        assertFalse(ticTacToe.isMoveValid(0, 0, moves, isPlayer1Turn));
+        assertFalse(ticTacToe.isMoveValid(0, 0, moves));
 
         // Test an invalid move for the wrong player's turn
-        assertFalse(ticTacToe.isMoveValid(1, 0, moves, false)); // Player 1's turn, but Player 2 is making a move
+        assertFalse(ticTacToe.isMoveValid(1, 0, moves)); // Player 1's turn, but Player 2 is making a move
     }
 
      @Test

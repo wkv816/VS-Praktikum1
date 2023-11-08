@@ -1,23 +1,24 @@
 package Client;
 
 import Regestry.TicTacToeAService;
+
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Map;
 
-public class Client2 {
+public class ClientPlayer {
 
-    // ipaddress is used if the host and client are not in the same network.
-     
-    private static final String ipaddress = "31.16.156.35";
+    private String name;
+
     private static final int port = 1099;
 
-    public static void main(String[] args) {
+    public ClientPlayer(String name) {
+        this.name = name;
+        startplayer();
+    }
 
-        ClientPlayer client1 = new ClientPlayer("Tommy2");
+    private void startplayer() {
 
-        //TicTacToeGame ticTacToe = new TicTacToeGame();
-    /*
         try {
             System.out.println("client started");
 
@@ -29,10 +30,10 @@ public class Client2 {
 
             // invoking the methode findGame just for test purpose
             //System.out.println(ticTacToeAService.findGame("client_2"));
-            System.out.println(ticTacToeAService.test("2"));
-            Map<String, String> gameMap = ticTacToeAService.findGame("client_2");
+            //System.out.println(ticTacToeAService.test("2"));
+            //System.out.println(ticTacToeAService.test("1"));
+            Map<String, String> gameMap = ticTacToeAService.findGame(name);
             //System.out.println(gameMap);
-
             String gameID = gameMap.get("Game ID");
             String opponentName = gameMap.get("Opponent Name");
             String firstMove = gameMap.get("First Move");       // ["your_move", "opponent_move", "no_opponent_found"]
@@ -41,16 +42,11 @@ public class Client2 {
 
             // wait for conaction to the server
             // if Server Connention succsesful -> start TTT Game
-            GuiGame ticTacToe = new GuiGame(ticTacToeAService, gameID, opponentName, firstMove, move);
-
-
+            GuiGame ticTacToe = new GuiGame(ticTacToeAService,name, gameID, opponentName, firstMove, move);
             System.out.println("client ended");
 
         } catch (Exception e) {
             System.out.println("client side error: " + e);
         }
-
-     */
     }
-
 }
