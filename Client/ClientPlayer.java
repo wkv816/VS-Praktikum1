@@ -12,11 +12,14 @@ public class ClientPlayer {
 
     private static final int port = 1099;
 
+    private String serverIP = "localhost";
+    //private String serverIP = "192.168.18.135";
+    //private String serverIP = "141.22.27.111";
     public ClientPlayer(String name) {
         this.name = name;
         startplayer();
     }
-
+// 192.168.0.100
     private void startplayer() {
 
         try {
@@ -24,14 +27,10 @@ public class ClientPlayer {
 
             // Locate the registry with the server's IP address
             // Get the reference of the exported object from the RMI registry
-            Registry registry = LocateRegistry.getRegistry("localhost", port);
+            Registry registry = LocateRegistry.getRegistry(serverIP, port);
             TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
 
 
-            // invoking the methode findGame just for test purpose
-            //System.out.println(ticTacToeAService.findGame("client_2"));
-            //System.out.println(ticTacToeAService.test("2"));
-            //System.out.println(ticTacToeAService.test("1"));
             Map<String, String> gameMap = ticTacToeAService.findGame(name);
             //System.out.println(gameMap);
             String gameID = gameMap.get("Game ID");

@@ -24,7 +24,8 @@ public class GuiGame implements ActionListener{
     private JPanel button_panel = new JPanel();
     private JLabel textfield = new JLabel();
     private JButton[][] buttons = new JButton[3][3];
-    private boolean player1_turn;
+    private boolean isFirstPlayer;
+
 
     public GuiGame(TicTacToeAService ticTacToeAService,String name, String gameID, String opponentName, String firstMove, String move){
 
@@ -35,6 +36,128 @@ public class GuiGame implements ActionListener{
         this.firstMove = firstMove;
         this.move = move;
 
+        creatGUI();
+
+        firstPlayer(firstMove);
+
+        if(!move.equals("")) {
+            int x = Integer.parseInt(move.substring(0,1));
+            int y = Integer.parseInt(move.substring(2,3));
+            System.out.println(" x: " + x+ " und y: " +y);
+            playerMove(x,y,!isFirstPlayer);
+            //buttons[x][y].doClick();
+        }
+
+        //buttons[2][2].doClick();
+
+    }
+
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (e.getSource() == buttons[i][j]) {
+                    if (buttons[i][j].getText().equals("")) {
+                        playerMove(i,j, isFirstPlayer);
+                        getCordinate(i, j);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void playerMove(final int i, final int j, final boolean bool) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                updateUI(i, j, bool);
+            }
+        });
+
+        // Hier lock.wait() aufrufen oder die entfernte Methode aufrufen
+        // ...
+    }
+
+    private void updateUI(int i, int j, boolean bool) {
+        if (bool) {
+            buttons[i][j].setForeground(new Color(255, 0, 0));
+            buttons[i][j].setText("X");
+            textfield.setText((opponent_name + "'s turn"));
+        } else {
+            buttons[i][j].setForeground(new Color(0, 0, 255));
+            buttons[i][j].setText("O");
+            textfield.setText((name + "'s turn"));
+        }
+    }
+
+    /*
+    private void playerMove(int i, int j,boolean bool){
+
+        if (bool) {
+            buttons[i][j].setForeground(new Color(255, 0, 0));
+            buttons[i][j].setText("X");
+            textfield.setText((opponent_name + "'s turn"));
+        } else {
+            buttons[i][j].setForeground(new Color(0, 0, 255));
+            buttons[i][j].setText("O");
+            textfield.setText((name + "'s turn"));
+        }
+    }*/
+
+    private void getCordinate(int i, int j) {
+        try {
+            String opponentAwnser;
+            opponentAwnser = tttAService.makeMove(i, j,gameID);
+
+
+            switch (opponentAwnser){
+                case "opponent_gone": // Spiel ist zu ende
+                    System.out.println("opponentAwnser: 'opponent_gone'");
+                    break;
+                case "you_win": // Spiel ist zu ende
+                case "you_lose": // Spiel ist zu ende
+                case "invalid_move":
+                    System.out.println("opponentAwnser: 'invalid_move'");
+                default:
+                    // "x,y;
+                    int x = Integer.parseInt(opponentAwnser.substring(0,1));
+                    int y = Integer.parseInt(opponentAwnser.substring(2,3));
+                    System.out.println("Coordinaten Button[" + x + "][" + y + "] von Opponent bekommen");
+                    playerMove(x,y,!isFirstPlayer);
+            }
+            //setEnabledAllButtons(true);
+            // hier muss dann auf die antwort des des gegners gewartet werden
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void firstPlayer (String firstPlayer ){
+        if(firstPlayer.equals("your_move")){
+            isFirstPlayer =true;
+            textfield.setText(name + "'s turn");
+        } else if(firstPlayer.equals("opponent_move")){
+            isFirstPlayer =false;
+            textfield.setText(opponent_name + "'s turn");
+        } else {
+            System.out.println( "no_opponent_found for Gui");
+        }
+    }
+
+    private void setEnabledAllButtons(boolean bool) {
+        for(int i= 0; i < 3;i++){
+            for(int j=0; j < 3; j++){
+                buttons[i][j].setEnabled(bool);
+            }
+        }
+
+    }
+
+
+    private void creatGUI() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800,800);
         frame.getContentPane().setBackground(new Color(50,50,50));
@@ -69,216 +192,5 @@ public class GuiGame implements ActionListener{
         frame.add(title_panel, BorderLayout.NORTH);
 
         frame.add(button_panel);
-        firstPlayer();
-        if(!move.equals("")) {
-            int x = Integer.parseInt(move.substring(0,1));
-
-            int y = Integer.parseInt(move.substring(2,3));
-
-            System.out.println("x: " + x+ " und y: " +y);
-            buttons[x][y].doClick();
-        }
-
-        //buttons[2][2].doClick();
-
     }
-
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (e.getSource() == buttons[i][j]) {
-                    if (player1_turn) {
-                        if (buttons[i][j].getText().equals("")) {
-                            buttons[i][j].setForeground(new Color(255, 0, 0));
-                            buttons[i][j].setText("X");
-                            player1_turn = false;
-                            textfield.setText((opponent_name + "'s turn"));
-                            getCordinate(i, j);
-                            //check();
-                        }
-                    } else {
-                        if (buttons[i][j].getText().equals("")) {
-                            buttons[i][j].setForeground(new Color(0, 0, 255));
-                            buttons[i][j].setText("O");
-                            player1_turn = true;
-                            textfield.setText((name + "'s turn"));
-                            getCordinate(i, j);
-                            //check();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void getCordinate(int i, int j) {
-        String x = String.valueOf(i);
-        String y = String.valueOf(j);
-
-        try {
-            String opponentAwnser = "tmp";
-            // tttAService.makeMove();
-
-
-                    //makeMove(x,y, gameID);
-            //setEnabledAllButtons(false);
-            opponentAwnser = tttAService.makeMove(i, j,gameID);
-
-
-            switch (opponentAwnser){
-                case "opponent_gone": // Spiel ist zu ende
-                    System.out.println("opponentAwnser: 'opponent_gone'");
-                    break;
-                case "you_win": // Spiel ist zu ende
-                case "you_lose": // Spiel ist zu ende
-                case "invalid_move":
-                    System.out.println("opponentAwnser: 'invalid_move'");
-                default:
-                    // "x,y;
-                    int a = Integer.parseInt(opponentAwnser.substring(0,1));
-                    int b = Integer.parseInt(opponentAwnser.substring(2,3));
-                    buttons[a][b].doClick();
-            }
-
-            //setEnabledAllButtons(true);
-
-            // hier muss dann auf die antwort des des gegners gewartet werden
-        } catch (RemoteException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private void setEnabledAllButtons(boolean bool) {
-        for(int i= 0; i < 3;i++){
-            for(int j=0; j < 3; j++){
-                buttons[i][j].setEnabled(bool);
-            }
-        }
-
-    }
-
-    public void firstPlayer (){
-        try {
-            Thread.sleep(2000);
-        } catch(InterruptedException e){
-            e.printStackTrace();
-        }
-
-        if(random.nextInt(2)==0){
-            player1_turn=true;
-            textfield.setText(name + "'s turn");
-        } else{
-            player1_turn=false;
-            textfield.setText(opponent_name + "'s turn");
-        }
-    }
-/*
-    public void check() {
-
-
-        for(int i=0; i < 9;i=i+3){
-            int a = 0 + i;
-            int b = 1 + i;
-            int c = 2 + i;
-            if(     (buttons[a].getText()=="X")&&
-                    (buttons[b].getText()=="X")&&
-                    (buttons[c].getText()=="X")){
-                xWins(a,b,c);
-                return;
-            }
-        }
-
-        for(int i=0; i < 3;i++){
-            int a = 0 + i;
-            int b = 3 + i;
-            int c = 6 + i;
-            if(     (buttons[a].getText()=="X")&&
-                    (buttons[b].getText()=="X")&&
-                    (buttons[c].getText()=="X")){
-                xWins(a,b,c);
-                return;
-            }
-        }
-
-        if(     (buttons[0].getText()=="X")&&
-                (buttons[4].getText()=="X")&&
-                (buttons[8].getText()=="X")){
-            xWins(0,4,8);
-            return;
-        }
-
-        if(     (buttons[2].getText()=="X")&&
-                (buttons[4].getText()=="X")&&
-                (buttons[6].getText()=="X")){
-            xWins(2,4,6);
-            return;
-        }
-
-        for(int i=0; i < 9;i=i+3){
-            int a = 0 + i;
-            int b = 1 + i;
-            int c = 2 + i;
-            if(     (buttons[a].getText()=="O")&&
-                    (buttons[b].getText()=="O")&&
-                    (buttons[c].getText()=="O")){
-                oWins(a,b,c);
-                return;
-            }
-        }
-
-        for(int i=0; i < 3;i++){
-            int a = 0 + i;
-            int b = 3 + i;
-            int c = 6 + i;
-            if(     (buttons[a].getText()=="O")&&
-                    (buttons[b].getText()=="O")&&
-                    (buttons[c].getText()=="O")){
-                oWins(a,b,c);
-                return;
-            }
-        }
-
-        if(     (buttons[0].getText()=="O")&&
-                (buttons[4].getText()=="O")&&
-                (buttons[8].getText()=="O")){
-            oWins(0,4,8);
-            return;
-        }
-
-        if(     (buttons[2].getText()=="O")&&
-                (buttons[4].getText()=="O")&&
-                (buttons[6].getText()=="O")){
-            oWins(2,4,6);
-            return;
-        }
-    }
-
-    public void xWins(int a, int b,int c){
-        buttons[a].setBackground(Color.GREEN);
-        buttons[b].setBackground(Color.GREEN);
-        buttons[c].setBackground(Color.GREEN);
-
-        for(int i =0; i < 9; i++){
-            buttons[i].setEnabled(false);
-        }
-        textfield.setText(name + " wins");
-    }
-
-    public void oWins(int a, int b,int c){
-        buttons[a].setBackground(Color.GREEN);
-        buttons[b].setBackground(Color.GREEN);
-        buttons[c].setBackground(Color.GREEN);
-
-        for(int i =0; i < 9; i++){
-            buttons[i].setEnabled(false);
-        }
-        textfield.setText(opponent_name + " wins");
-
-    }
-
- */
-
 }

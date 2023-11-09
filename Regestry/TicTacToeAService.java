@@ -76,8 +76,6 @@ public interface TicTacToeAService extends Remote {
 
 
 // for Test purposis
-    public String test(String str)
-        throws RemoteException;
+    //public String test(String str) throws RemoteException;
 
-    public String test2(String str, String x, String y) throws RemoteException;
 }
