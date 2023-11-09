@@ -58,6 +58,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
     // "Game ID", "Opponent Name", "First Move", "Move"
 
     private final Object lock = new Object();
+    private final Object lock2 = new Object();
 
     private final Lock mutex = new ReentrantLock();
 
@@ -66,6 +67,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
     private int playerCounter = 0;
     private boolean firstPlayerMadeMove = false;
     private String lastMove = "";
+
+    private HashMap<Keys, String> map = new HashMap<>();
 
     private boolean isYourTurn;
     @Override
@@ -86,14 +89,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     // Warten auf den zweiten Spieler
                     while (playerCounter < 2) {
                         try {
-
                             lock.wait();
                         } catch (InterruptedException e) {
                             // Handle InterruptedException
                         }
                     }
-
-
                     //Hier soll der Thread warten bis ein zweiter Thread hier rein kommt und in das if else rein geht
                 } else if (secondPlayerName.isEmpty()) {
                     secondPlayerName = clientName;
@@ -108,23 +108,50 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     }
                     //Hier soll der Thread, der oben in das erste if reingegangen ist aufgeweckt werden und dieser thread soll blockieren
                 }
-                int l = 0;
-                if (l < 1) {
-                    l++;
-                    String gameID = "tmpTestGameID";
-                    String opponentName = secondPlayerName;
-                    String firstPlayer = "your_move";
-                    String move = "";
+
+                for (HashMap<Keys, String> map : gameArrayList) {
+                    if (map.get(Keys.GAMESTATUS).equals("waiting-for-player")) {
+
+                        String gameStatus = "playing";
+                        String gameID = map.get(Keys.GAMEID);
+                        String firstPlayer = map.get(Keys.FIRSTPLAYER);
+                        String secondPlayer = map.get(Keys.SECONDPLAYER);
+
+                        // Randomly choose who begins
+                        boolean thisPlayerFirst = random.nextBoolean();
+                        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
+                        String firstMove = thisPlayerFirst ? "your_move" : "your_opponent";
+
+                        // change game status to Playing
+                        // Assign values to the keys
+                        map.put(Keys.GAMESTATUS, gameStatus);
+                        map.put(Keys.SECONDPLAYER, clientName);
+                        map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
+                        map.put(Keys.FRISTMOVE, firstMove);
+
+                        return returnfindgameHashMap(gameID, clientName, gameStatus, firstMove);
+                    }
+                }
+
+                return creatGameSession(clientName);
 
 
-                    HashMap<String, String> tmpMap = new HashMap<>();
-                    tmpMap.put("Game ID", gameID);
-                    tmpMap.put("Opponent Name", opponentName);
-                    tmpMap.put("First Move", firstPlayer);
-                    tmpMap.put("Move", move);
+                /*
+                String gameID = generateGameId();
+                String opponentName = secondPlayerName;
+                String firstPlayer = "your_move";
+                String move = "";
 
-                    return tmpMap;
-                } else {
+
+                HashMap<String, String> tmpMap = new HashMap<>();
+                tmpMap.put("Game ID", gameID);
+                tmpMap.put("Opponent Name", opponentName);
+                tmpMap.put("First Move", firstPlayer);
+                tmpMap.put("Move", move);
+
+                return tmpMap;*/
+
+                /*else {
                     String gameID = "tmpTestGameID";
                     String opponentName = firstPlayerName;
                     String firstPlayer = "opponent_move";
@@ -137,7 +164,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     tmpMap.put("First Move", firstPlayer);
                     tmpMap.put("Move", move);
                     return tmpMap;
-                }
+                }*/
 
             }
         } finally {
@@ -176,8 +203,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
             */
 
 
-        // No game found, create a new one in "waiting-for-player" state
-        //return creatGameSession(clientName);
+        // No game found, create a new one in "waiting-for-player" stat
 
     }
 
@@ -191,8 +217,24 @@ public class TicTacToeAImpl implements TicTacToeAService {
     public String makeMove(int x, int y, String gameId) throws RemoteException {
 
         lastMove = x + "," + y ;
+        synchronized (lock) {
+            int i = 0;
 
-        for (HashMap<Keys, String> map : gameArrayList) { 
+            while (i < 1) {
+                try {
+                    i++;
+                    firstPlayerMadeMove=true;
+                    lock.notify();
+                    System.out.println("First move gemacht [" + x +"," + y + "] - jetzt sollte zweite Gui aufgehen");
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    // Handle InterruptedException
+                }
+            }
+        }
+
+
+        //for (HashMap<Keys, String> map : gameArrayList) {
             if (map.get(Keys.GAMEID).equals(gameId)) {
                 
                 String moves = map.get(Keys.MOVES);
@@ -218,9 +260,10 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 } else {
                     return "invalid_move";
                 }
-            }
+            //}
         }
-        return "game_does_not_exist";
+        //return "game_does_not_exist";
+        return lastMove;
     }
 
     @Override
@@ -264,7 +307,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
     public HashMap<String, String> returnfindgameHashMap(String gameID,String clientName, String gameStatus,String firstMove) {
         HashMap<String, String> returnMap = new HashMap<>();
 
-        for (HashMap<Keys, String> map : gameArrayList) {
+        //for (HashMap<Keys, String> map : gameArrayList) {
             if (map.get(Keys.GAMEID).equals(gameID)) {
 
                 
@@ -278,10 +321,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
                                 
                 returnMap.put("Game ID", gameID);
                 returnMap.put("First Move", firstMove);
-                returnMap.put("Move", move);
+                //returnMap.put("Move", move);
+                returnMap.put("Move", lastMove);
                 returnMap.put("Opponent Name", opponentName);
             }        
-        }
+        //}
         return returnMap;	
     }
 

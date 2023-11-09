@@ -69,8 +69,16 @@ public class GuiGame implements ActionListener{
         frame.add(title_panel, BorderLayout.NORTH);
 
         frame.add(button_panel);
-
         firstPlayer();
+        if(!move.equals("")) {
+            int x = Integer.parseInt(move.substring(0,1));
+
+            int y = Integer.parseInt(move.substring(2,3));
+
+            System.out.println("x: " + x+ " und y: " +y);
+            buttons[x][y].doClick();
+        }
+
         //buttons[2][2].doClick();
 
     }
@@ -113,10 +121,11 @@ public class GuiGame implements ActionListener{
         try {
             String opponentAwnser = "tmp";
             // tttAService.makeMove();
-            tttAService.test2("1",x,y);
+
 
                     //makeMove(x,y, gameID);
-            setEnabledAllButtons(false);
+            //setEnabledAllButtons(false);
+            opponentAwnser = tttAService.makeMove(i, j,gameID);
 
 
             switch (opponentAwnser){
@@ -129,11 +138,12 @@ public class GuiGame implements ActionListener{
                     System.out.println("opponentAwnser: 'invalid_move'");
                 default:
                     // "x,y;
-                    char xCordinate = opponentAwnser.charAt(0);
-                    char yCordinate = opponentAwnser.charAt(2);
+                    int a = Integer.parseInt(opponentAwnser.substring(0,1));
+                    int b = Integer.parseInt(opponentAwnser.substring(2,3));
+                    buttons[a][b].doClick();
             }
-            //buttons[2][2].doClick();
-            setEnabledAllButtons(true);
+
+            //setEnabledAllButtons(true);
 
             // hier muss dann auf die antwort des des gegners gewartet werden
         } catch (RemoteException ex) {
