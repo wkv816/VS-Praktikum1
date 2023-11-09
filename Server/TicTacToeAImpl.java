@@ -281,7 +281,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private HashMap<String, String> creatGameSession(String clientName) {
 
-        HashMap<Keys, String> session = new HashMap<>();
+        //HashMap<Keys, String> session = new HashMap<>();
         // Create a new gameID
         String gameId = generateGameId();
         String gameStatus= "waiting-for-player";
@@ -289,16 +289,16 @@ public class TicTacToeAImpl implements TicTacToeAService {
         
 
         // Create a new Hashmap session with following values
-        session.put(Keys.GAMESTATUS, gameStatus);
-        session.put(Keys.GAMEID, gameId);
-        session.put(Keys.FRISTMOVE, firstMove);
-        session.put(Keys.FIRSTPLAYER, clientName);
-        session.put(Keys.MOVES, "");
-        session.put(Keys.SECONDPLAYER, "");
-        session.put(Keys.WINNER, "");
-        session.put(Keys.CURRENTPLAYERSTURN,"");
+        map.put(Keys.GAMESTATUS, gameStatus);
+        map.put(Keys.GAMEID, gameId);
+        map.put(Keys.FRISTMOVE, firstMove);
+        map.put(Keys.FIRSTPLAYER, clientName);
+        map.put(Keys.MOVES, "");
+        map.put(Keys.SECONDPLAYER, "");
+        map.put(Keys.WINNER, "");
+        map.put(Keys.CURRENTPLAYERSTURN,"");
 
-        gameArrayList.add(session);
+
 
         return returnfindgameHashMap(gameId, clientName, gameStatus, firstMove);
         
