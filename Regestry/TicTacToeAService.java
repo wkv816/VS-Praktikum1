@@ -71,8 +71,7 @@ public interface TicTacToeAService extends Remote {
 // Each string has the pattern "name: x,y" or "winner: NAME".
 // A winner must be the last element in the array and follows
 // the move that won the game.
-    public ArrayList<String> fullUpdate(String gameId)
-            throws RemoteException;
+    public ArrayList<String> fullUpdate(String gameId) throws RemoteException;
 
 
 // for Test purposis

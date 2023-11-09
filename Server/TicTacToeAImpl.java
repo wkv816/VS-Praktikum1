@@ -72,6 +72,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private ArrayList<String> allMoves = new ArrayList<>();
 
+    private boolean youLose = false;
+
     private boolean isYourTurn;
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
@@ -84,9 +86,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     firstPlayerName = clientName;
                     generateGameId();
                     playerCounter++;
-                    // Wachen den zweiten Spieler auf
                     lock.notify();
-                    // Warten auf den zweiten Spieler
                     while (playerCounter < 2) {
                         try {
                             lock.wait();
@@ -108,6 +108,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     }
                     //Hier soll der Thread, der oben in das erste if reingegangen ist aufgeweckt werden und dieser thread soll blockieren
                 }
+
+                // else if --> Clientname gibt es schon
+                    // dann nicht blockieren sondern
+                    // return returnfindgameHashMap(gameID, firstPlayerName, "your_opponent");
+
 
 
                 if (!map.isEmpty()) {
@@ -225,6 +230,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
             }
         }
 
+        if(youLose){
+            youLose = false;
+            return "you_lose" + x + "," + y;
+        }
+
         String moves = map.get(Keys.MOVES);
         String currentplayerturn = map.get(Keys.CURRENTPLAYERSTURN);
         String firstPlayer = map.get(Keys.FIRSTPLAYER);
@@ -235,25 +245,26 @@ public class TicTacToeAImpl implements TicTacToeAService {
             if (!moves.isEmpty()) {
                 moves += "|";
             }
-            moves += currentplayerturn + "," + x + "," + y;
+            moves +="," + x + "," + y;
 
-            /*
+
             if (isGameOver(x, y, moves)) {
+                youLose = true;
+                lock.notify();
                 return "you_win: " + x + "," + y;
             } else {
-
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
                 return x + "," + y;
             }
-            */
+
         } else {
             return "invalid_move";
         }
 
 
         //return "game_does_not_exist";
-        return lastMove;
+        //return lastMove;
     }
 
 

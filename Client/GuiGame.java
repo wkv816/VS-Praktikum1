@@ -35,17 +35,20 @@ public class GuiGame implements ActionListener{
         this.opponent_name = opponentName;
         this.firstMove = firstMove;
         this.move = move;
-
         creatGUI();
+        // ArrayList update = tttAService.fullUpdate
+        // if !update.isempty()
+        //      dann Updates auf die Gui packen
+        // wenn es == empty
+        // hier den rest ausführen
 
         firstPlayer(firstMove);
 
         if(!move.equals("")) {
             int x = Integer.parseInt(move.substring(0,1));
             int y = Integer.parseInt(move.substring(2,3));
-            System.out.println(" x: " + x+ " und y: " +y);
+            System.out.println(" x: " + x + " und y: " +y);
             playerMove(x,y,!isFirstPlayer);
-            //buttons[x][y].doClick();
         }
 
         //buttons[2][2].doClick();
@@ -60,15 +63,21 @@ public class GuiGame implements ActionListener{
             for (int j = 0; j < 3; j++) {
                 if (e.getSource() == buttons[i][j]) {
                     if (buttons[i][j].getText().equals("")) {
-                        playerMove(i,j, isFirstPlayer);
-                        getCordinate(i, j);
+                        int finalI = i;
+                        int finalJ = j;
+                        Thread thread = new Thread(() -> {
+                            playerMove(finalI, finalJ,isFirstPlayer);
+                            getCordinate(finalI, finalJ);
+                        });
+                        thread.start();
+                        //getCordinate(i, j);
                     }
                 }
             }
         }
     }
 
-
+/*
     private void playerMove(final int i, final int j, final boolean bool) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -91,9 +100,9 @@ public class GuiGame implements ActionListener{
             buttons[i][j].setText("O");
             textfield.setText((name + "'s turn"));
         }
-    }
+    }*/
 
-    /*
+
     private void playerMove(int i, int j,boolean bool){
 
         if (bool) {
@@ -105,10 +114,11 @@ public class GuiGame implements ActionListener{
             buttons[i][j].setText("O");
             textfield.setText((name + "'s turn"));
         }
-    }*/
+    }
 
     private void getCordinate(int i, int j) {
         try {
+            setEnabledAllButtons(false);
             String opponentAwnser;
             opponentAwnser = tttAService.makeMove(i, j,gameID);
 
@@ -126,9 +136,12 @@ public class GuiGame implements ActionListener{
                     int x = Integer.parseInt(opponentAwnser.substring(0,1));
                     int y = Integer.parseInt(opponentAwnser.substring(2,3));
                     System.out.println("Coordinaten Button[" + x + "][" + y + "] von Opponent bekommen");
-                    playerMove(x,y,!isFirstPlayer);
+                    //Thread thread = new Thread(() -> {
+                        playerMove(x,y,!isFirstPlayer);
+                    //});
+
             }
-            //setEnabledAllButtons(true);
+            setEnabledAllButtons(true);
             // hier muss dann auf die antwort des des gegners gewartet werden
         } catch (RemoteException ex) {
             throw new RuntimeException(ex);
