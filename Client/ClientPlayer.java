@@ -1,38 +1,38 @@
 package Client;
 
 import Regestry.TicTacToeAService;
+
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Map;
 
-public class Client2 {
+public class ClientPlayer {
 
-    // ipaddress is used if the host and client are not in the same network.
-     
-    private static final String ipaddress = "31.16.156.35";
+    private String name;
+
     private static final int port = 1099;
 
-    public static void main(String[] args) {
+    private String serverIP = "localhost";
+    //private String serverIP = "192.168.18.135";
+    //private String serverIP = "141.22.27.111";
+    public ClientPlayer(String name) {
+        this.name = name;
+        startplayer();
+    }
+// 192.168.0.100
+    private void startplayer() {
 
-        ClientPlayer client1 = new ClientPlayer("Tommy2");
-
-        //TicTacToeGame ticTacToe = new TicTacToeGame();
-    /*
         try {
             System.out.println("client started");
 
             // Locate the registry with the server's IP address
             // Get the reference of the exported object from the RMI registry
-            Registry registry = LocateRegistry.getRegistry("localhost", port);
+            Registry registry = LocateRegistry.getRegistry(serverIP, port);
             TicTacToeAService ticTacToeAService = (TicTacToeAService) registry.lookup("bindedstub");
 
 
-            // invoking the methode findGame just for test purpose
-            //System.out.println(ticTacToeAService.findGame("client_2"));
-            System.out.println(ticTacToeAService.test("2"));
-            Map<String, String> gameMap = ticTacToeAService.findGame("client_2");
+            Map<String, String> gameMap = ticTacToeAService.findGame(name);
             //System.out.println(gameMap);
-
             String gameID = gameMap.get("Game ID");
             String opponentName = gameMap.get("Opponent Name");
             String firstMove = gameMap.get("First Move");       // ["your_move", "opponent_move", "no_opponent_found"]
@@ -41,16 +41,11 @@ public class Client2 {
 
             // wait for conaction to the server
             // if Server Connention succsesful -> start TTT Game
-            GuiGame ticTacToe = new GuiGame(ticTacToeAService, gameID, opponentName, firstMove, move);
-
-
+            GUITicTacToe ticTacToe = new GUITicTacToe(ticTacToeAService, name, gameID);
             System.out.println("client ended");
 
         } catch (Exception e) {
             System.out.println("client side error: " + e);
         }
-
-     */
     }
-
 }
