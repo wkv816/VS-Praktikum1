@@ -140,7 +140,7 @@ public class GUITicTacToe implements ActionListener {
                     handleGameEnd("Opponent has left the game.");
                     break;
                 case "you_win":
-                    handleGameEnd("Congratulations! You win!");
+                    //handleGameEnd("Congratulations! You win!");
                     break;
                 case "you_lose":
                     handleGameEnd("Sorry, you lose. Try again!");
@@ -173,6 +173,7 @@ public class GUITicTacToe implements ActionListener {
 
     private void playerMove(int i, int j, boolean player_A) {
         JButton button = buttons[i][j];
+
         if(amIPlayerA && myturn){
             button.setForeground(new Color(255, 0, 0));
             button.setText("X");
@@ -203,60 +204,59 @@ public class GUITicTacToe implements ActionListener {
 
     private void clientfullupdate() {
 
+
+        this.winner= fullupdateArrayList.get(6);
+
+
+
         String player_A= fullupdateArrayList.get(4);
         String player_B= fullupdateArrayList.get(5);
         String gameStatus = fullupdateArrayList.get(0);
-        this.winner= fullupdateArrayList.get(6);
-        System.out.println("player_A: "+player_A+" player_B: "+player_B+" playerName: "+playerName);
+
+        //System.out.println("player_A: "+player_A+" player_B: "+player_B+" playerName: "+playerName);
         this.opponentName = (playerName.equals(player_A)) ? player_B : player_A;
         this.winner = fullupdateArrayList.get(6);
-        
+
         this.currentPlayerTurn = fullupdateArrayList.get(7);
         this.myturn = currentPlayerTurn.equals(playerName)? true: false;
-        
+
         boolean isMoveChanged= !this.moves.equals(fullupdateArrayList.get(3));
-
-
         if (isMoveChanged) {
             moves=fullupdateArrayList.get(3);
             String opponentmovedetected =moves.substring(moves.length() - 3);
             int x = Character.getNumericValue(opponentmovedetected.charAt(0));
             int y = Character.getNumericValue(opponentmovedetected.charAt(2));
             amIPlayerA= this.playerName.equals(player_A);
-
             playerMove(x, y, amIPlayerA);
         }
 
         if(winner.isEmpty()){
-            statusLabel.setText("PN="+ playerName + " "+"ON= "+ opponentName +
-                " Turn"+ (myturn ? playerName : opponentName)+ " Status= "+ gameStatus);
-        System.out.println("myturn: "+myturn);
 
-        if (myturn) {
-            setAllButtonsEnabled(true);
-        }else {
-            setAllButtonsEnabled(false);
-        }
-        
-        
-        }
-        else{
-            if(myturn){
+            statusLabel.setText("PN="+ playerName + " "+"ON= "+ opponentName +
+                    " Turn"+ (myturn ? playerName : opponentName)+ " Status= "+ gameStatus);
+            //System.out.println("myturn: "+myturn);
+
+            if (myturn) {
+                setAllButtonsEnabled(true);
+            }else {
+                setAllButtonsEnabled(false);
+            }
+        } else{
+
+            if(!myturn){
                 statusLabel.setText("You won the game. "+ winner);
                 setAllButtonsEnabled(false);
 
+
             }else{
-                statusLabel.setText("You lost the game. "+ winner);
+                //Loser
+                String loser= (winner == player_A)? player_B: player_A;
+                statusLabel.setText("You lost the game. " + loser);
                 setAllButtonsEnabled(false);
             }
         }
-        
 
-
-        
         // enable / disable buttons on myturn
-        
-
     }
     
 }

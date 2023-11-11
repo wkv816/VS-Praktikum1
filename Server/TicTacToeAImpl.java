@@ -102,6 +102,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 // check if game is over
                 if (isGameOver(moves)) {
                     map.put(Keys.WINNER, currentplayerturn);
+                    currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
+                    map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
                     return "you_win: " + x + "," + y;
                 } 
                 // check if game is not over and there are less moves than 9
@@ -140,7 +142,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
             return list;
         }
-        
+
         return list;
     }
 
