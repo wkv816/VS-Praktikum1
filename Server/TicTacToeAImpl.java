@@ -3,13 +3,7 @@ package Server;
 
 import Regestry.TicTacToeAService;
 import java.rmi.RemoteException;
-import java.rmi.server.RemoteServer;
-import java.rmi.server.ServerNotActiveException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,7 +24,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         FIRSTPLAYER,
         SECONDPLAYER,
         WINNER,
-        CURRENTPLAYERSTURN
+        CURRENTPLAYERSTURN,
     }
     /*) 
      * public enum Values {
@@ -62,8 +56,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private final Lock mutex = new ReentrantLock();
 
-    private String firstPlayerName = "";
-    private String secondPlayerName = "";
+    private String firstClient = "";
+    private String secondClient = "";
     private int playerCounter = 0;
     private boolean firstPlayerMadeMove = false;
     private String lastMove = "";
@@ -74,47 +68,59 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private boolean youLose = false;
 
+    private boolean thisPlayerFirst = false;
+
     private boolean isYourTurn;
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
         isYourTurn = true; // hier muss irgendwas mit random hin
 
         try {
+            // Bevor die hier hin kommen sollen die von sowas wie einem Semaphor oder so blockiert werden
             synchronized (lock) {
+                boolean iAmSecond;
+                if (firstClient.isEmpty()) {
+                    firstClient = clientName;
 
-                if (firstPlayerName.isEmpty()) {
-                    firstPlayerName = clientName;
+                    boolean thisPlayerFirst = random.nextBoolean();
+                    iAmSecond = thisPlayerFirst;
                     generateGameId();
-                    playerCounter++;
-                    lock.notify();
-                    while (playerCounter < 2) {
+                    while (playerCounter < 3 || iAmSecond) {
                         try {
+                            System.out.println("Client 1 macht wait");
+                            playerCounter++;
+                            lock.notify();
                             lock.wait();
+
                         } catch (InterruptedException e) {
                             // Handle InterruptedException
                         }
                     }
-                    //Hier soll der Thread warten bis ein zweiter Thread hier rein kommt und in das if else rein geht
-                } else if (secondPlayerName.isEmpty()) {
-                    secondPlayerName = clientName;
-                    playerCounter++;
-                    lock.notify();
-                    while (!firstPlayerMadeMove) {
+                } else if (secondClient.isEmpty()) {
+                    secondClient = clientName;
+                    iAmSecond = thisPlayerFirst;
+
+                    while (playerCounter < 3 || !iAmSecond) {
                         try {
+
+                            System.out.println("Client 2 macht wait");
+                            playerCounter++;
+                            lock.notify();
                             lock.wait();
+                            playerCounter++;
                         } catch (InterruptedException e) {
                             // Handle InterruptedException
                         }
                     }
-                    //Hier soll der Thread, der oben in das erste if reingegangen ist aufgeweckt werden und dieser thread soll blockieren
                 }
+                iAmSecond = !thisPlayerFirst;
 
                 // else if --> Clientname gibt es schon
                     // dann nicht blockieren sondern
                     // return returnfindgameHashMap(gameID, firstPlayerName, "your_opponent");
 
 
-
+                // Der, der als zweites das wait Verlässt kommt immer hier entlang
                 if (!map.isEmpty()) {
 
                     String gameStatus = "playing";
@@ -123,18 +129,20 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     String secondPlayer = map.get(Keys.SECONDPLAYER);
 
                     // Randomly choose who begins
-                    boolean thisPlayerFirst = random.nextBoolean();
+
                     String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
-                    String firstMove = thisPlayerFirst ? "your_move" : "your_opponent";
-                    System.out.println("Jetzt müsste der zweite dran");
+                    //String firstMove = thisPlayerFirst ? "your_move" : "opponent_move";
+                    String firstMove = "opponent_move";
+                    //System.out.println("Jetzt müsste der zweite dran");
                     map.put(Keys.GAMESTATUS, gameStatus);
                     map.put(Keys.SECONDPLAYER, clientName);
                     map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
                     map.put(Keys.FRISTMOVE, firstMove);
 
-                    return returnfindgameHashMap(gameID, firstPlayerName, "your_opponent");
+                    return returnfindgameHashMap(gameID, firstClient, "opponent_move");
                 }
 
+                //Der, der als erstes das wait verlässt, kommt immer hier entlang
                 String gameId = generateGameId();
                 String gameStatus= "waiting-for-player";
                 String firstMove= "";
@@ -149,9 +157,9 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 map.put(Keys.SECONDPLAYER, "");
                 map.put(Keys.WINNER, "");
                 map.put(Keys.CURRENTPLAYERSTURN,"");
-                System.out.println("Jetzt müsste der Erste dran sein");
+                //System.out.println("Jetzt müsste der Erste dran sein");
 
-                return returnfindgameHashMap(gameId, secondPlayerName, "your_move");
+                return returnfindgameHashMap(gameId, secondClient, "your_move");
 
 
                 /*
@@ -232,6 +240,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
         if(youLose){
             youLose = false;
+            // TODO in der Methode resetGameInformtion()muss alles zurückgesetzt werden
+            // resetGameInformtion()
             return "you_lose" + x + "," + y;
         }
 
@@ -248,7 +258,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
             moves +="," + x + "," + y;
 
 
-            if (isGameOver(x, y, moves)) {
+            //if (isGameOver(x, y, moves)) {
+            if (isGameOver(lastMove)) {
                 youLose = true;
                 lock.notify();
                 return "you_win: " + x + "," + y;
@@ -257,12 +268,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
                 return x + "," + y;
             }
+            //return lastMove;
 
         } else {
             return "invalid_move";
         }
-
-
         //return "game_does_not_exist";
         //return lastMove;
     }
@@ -271,10 +281,29 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public ArrayList<String> fullUpdate(String gameId) throws RemoteException {
-        // Todo
-        System.out.println("invoked fullUpdate()");
-        return null;
-    }
+        String player_A=map.get(Keys.FIRSTPLAYER);
+        String player_B=map.get(Keys.SECONDPLAYER);
+        boolean tmpbool = true;
+        String moves=map.get(Keys.MOVES);
+        String [] movesparts = moves.split("\\|");
+
+        ArrayList <String>ruckgabe_array= new ArrayList<>();
+
+        for(String str: movesparts){
+            if (tmpbool) {
+                String str_tmp= player_A+ ": " + str;
+                ruckgabe_array.add( str_tmp);
+                tmpbool=false;
+            }
+            else{
+                String str_tmp= player_B+ ": " + str;
+                ruckgabe_array.add( str_tmp);
+                tmpbool=true;
+            }
+
+        }
+        return ruckgabe_array;
+}
 
 
 
@@ -282,34 +311,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         return "Game" + random.nextInt(1000);
     }
 
-   /* private HashMap<String, String> creatGameSession(String clientName) {
-
-        //HashMap<Keys, String> session = new HashMap<>();
-        // Create a new gameID
-        String gameId = generateGameId();
-        String gameStatus= "waiting-for-player";
-        String firstMove= "no_opponent_found";
-        
-
-        // Create a new Hashmap session with following values
-        map.put(Keys.GAMESTATUS, gameStatus);
-        map.put(Keys.GAMEID, gameId);
-        map.put(Keys.FRISTMOVE, firstMove);
-        map.put(Keys.FIRSTPLAYER, clientName);
-        map.put(Keys.MOVES, "");
-        map.put(Keys.SECONDPLAYER, "");
-        map.put(Keys.WINNER, "");
-        map.put(Keys.CURRENTPLAYERSTURN,"");
-
-
-
-        return returnfindgameHashMap(gameId, clientName, gameStatus, firstMove);
-        
-    }*/
-
-
-
-    public boolean isMoveValid(int x, int y,String moves) {
+     public boolean isMoveValid(int x, int y,String moves) {
 
         // Check if the move is out of bounds (0-2 for both x and y).
         if (x < 0 || x >= 3 || y < 0 || y >= 3) {
@@ -335,6 +337,36 @@ public class TicTacToeAImpl implements TicTacToeAService {
         return true; // Move is valid.
     }
 
+    public boolean isGameOver(String moves) {
+        String[] moveParts = moves.split("\\|");
+        int lenghtofmoves= moveParts.length;
+        System.out.println(lenghtofmoves);
+        boolean currentPlayerTurn= lenghtofmoves%2==0? false: true;
+        List<String> playerMoves = new ArrayList<>();
+
+        for (int i = currentPlayerTurn ? 0 : 1; i < moveParts.length; i += 2) {
+            playerMoves.add(moveParts[i]);
+        }
+
+        String[][] winConditions = {
+                {"0,0", "0,1", "0,2"},
+                {"1,0", "1,1", "1,2"},
+                {"2,0", "2,1", "2,2"},
+                {"0,0", "1,0", "2,0"},
+                {"0,1", "1,1", "2,1"},
+                {"0,2", "1,2", "2,2"},
+                {"0,0", "1,1", "2,2"},
+                {"0,2", "1,1", "2,0"}
+        };
+
+        for (String[] condition : winConditions) {
+            if (playerMoves.containsAll(Arrays.asList(condition))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    /*
     public boolean isGameOver(int x, int y, String moves) {
         // Split the moves string into individual moves.
         String[] moveArray = moves.split(",");
@@ -372,72 +404,13 @@ public class TicTacToeAImpl implements TicTacToeAService {
         }
         
         return false; // Game can continue.
-    }
+    }*/
 
-    public void registerClient(String clientID) throws ServerNotActiveException {
-        String clientSessionID = RemoteServer.getClientHost();
-        clientSessionRegistry.put(clientSessionID, clientID);
-    }
-    
 
     private void signalOtherPlayer(String gameId) {
         // Implement logic to signal the other player that it's their turn.
         
     }
-
-    int counter = 0;
-    private boolean yourTurn1 = false;
-    private boolean yourTurn2  = false;
-
-    /*
-    @Override
-    public String test(String str) throws  RemoteException{
-
-        String clientSessionID = null;
-        try {
-            clientSessionID = RemoteServer.getClientHost();
-        } catch (ServerNotActiveException e) {
-            throw new RuntimeException(e);
-        }
-        String clientID = clientSessionRegistry.get(clientSessionID);
-
-        System.out.println("test ausgabe: " + str);
-        counter++;
-        if(str.equals("1")){
-            yourTurn1 = false;
-            yourTurn2 = true;
-            //System.out.println("befoore 10 sec");
-
-            try {
-
-                //System.out.println("waiting 10 sec");
-                System.out.println("Client 1 in der Loop mit Counter: " +counter);
-                while(yourTurn1==false){
-                    Thread.sleep(300);
-                }
-                System.out.println("Client 1 ist aus der loop raus!");
-            } catch(InterruptedException e){
-                e.printStackTrace();
-            }
-
-
-        }else if (str.equals("2")){
-
-            yourTurn1 = true;
-            yourTurn2 = false;
-            System.out.println("Client 2 in der Loop mit Counter: " + counter);
-            while(yourTurn2==false){
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            System.out.println("Client 2 ist aus der loop raus!");
-        }
-        return "done done";
-    }*/
-
 
 
     public static List<String> splitStringToList(String input) {
@@ -453,6 +426,12 @@ public class TicTacToeAImpl implements TicTacToeAService {
             }
         }
         return resultList;
+    }
+
+    private void resetGameInformtion(){
+        firstClient = "";
+        secondClient = "";
+        map.clear();
     }
 
     public static void main(String[] args) {

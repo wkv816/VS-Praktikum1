@@ -27,7 +27,7 @@ public class GuiGame implements ActionListener{
     private boolean isFirstPlayer;
 
 
-    public GuiGame(TicTacToeAService ticTacToeAService,String name, String gameID, String opponentName, String firstMove, String move){
+    public GuiGame(TicTacToeAService ticTacToeAService,String name, String gameID, String opponentName, String firstMove, String move) throws RemoteException {
 
         tttAService = ticTacToeAService;
         this.name = name;
@@ -42,9 +42,16 @@ public class GuiGame implements ActionListener{
         // wenn es == empty
         // hier den rest ausführen
 
+        System.out.println("firstMove: " + firstMove);
         firstPlayer(firstMove);
+        ArrayList<String> currentGameField = ticTacToeAService.fullUpdate(gameID);
 
-        if(!move.equals("")) {
+        if(!currentGameField.isEmpty()){
+            //TODO Das Gamefield auf die GUI bringen
+            // Name Prüfen am ende des Stings und das Zeichen suchen
+            // Erster spieler hat hier immer ein "X"
+
+        }else if(!move.equals("")) {
             int x = Integer.parseInt(move.substring(0,1));
             int y = Integer.parseInt(move.substring(2,3));
             System.out.println(" x: " + x + " und y: " +y);
@@ -67,7 +74,7 @@ public class GuiGame implements ActionListener{
                         int finalJ = j;
                         Thread thread = new Thread(() -> {
                             playerMove(finalI, finalJ,isFirstPlayer);
-                            getCordinate(finalI, finalJ);
+                            gameMoves(finalI, finalJ);
                         });
                         thread.start();
                         //getCordinate(i, j);
@@ -76,32 +83,6 @@ public class GuiGame implements ActionListener{
             }
         }
     }
-
-/*
-    private void playerMove(final int i, final int j, final boolean bool) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                updateUI(i, j, bool);
-            }
-        });
-
-        // Hier lock.wait() aufrufen oder die entfernte Methode aufrufen
-        // ...
-    }
-
-    private void updateUI(int i, int j, boolean bool) {
-        if (bool) {
-            buttons[i][j].setForeground(new Color(255, 0, 0));
-            buttons[i][j].setText("X");
-            textfield.setText((opponent_name + "'s turn"));
-        } else {
-            buttons[i][j].setForeground(new Color(0, 0, 255));
-            buttons[i][j].setText("O");
-            textfield.setText((name + "'s turn"));
-        }
-    }*/
-
 
     private void playerMove(int i, int j,boolean bool){
 
@@ -116,19 +97,23 @@ public class GuiGame implements ActionListener{
         }
     }
 
-    private void getCordinate(int i, int j) {
+    private void gameMoves(int i, int j) {
         try {
             setEnabledAllButtons(false);
             String opponentAwnser;
             opponentAwnser = tttAService.makeMove(i, j,gameID);
 
-
+            if (opponentAwnser.startsWith("you_win") || opponentAwnser.startsWith("you_lose")) {
+                System.out.println("Spiel beendet: " + opponentAwnser);
+                frame.dispose(); // Beendet die GUI
+            }
             switch (opponentAwnser){
                 case "opponent_gone": // Spiel ist zu ende
                     System.out.println("opponentAwnser: 'opponent_gone'");
+                    //frame.dispose(); // Beendet die GUI
                     break;
-                case "you_win": // Spiel ist zu ende
-                case "you_lose": // Spiel ist zu ende
+                //case "you_win": // Spiel ist zu ende
+                //case "you_lose": // Spiel ist zu ende
                 case "invalid_move":
                     System.out.println("opponentAwnser: 'invalid_move'");
                 default:
