@@ -5,8 +5,6 @@ import Regestry.TicTacToeAService;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class TicTacToeAImpl implements TicTacToeAService {
 
@@ -21,8 +19,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
         GAMEID,
         FRISTMOVE,
         MOVES,
-        FIRSTPLAYER,
-        SECONDPLAYER,
+        PLAYER_A,
+        PLAYER_B,
         WINNER,
         CURRENTPLAYERSTURN,
     }
@@ -80,7 +78,6 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
                     //boolean thisPlayerFirst = random.nextBoolean();
                     thisPlayerFirst = true;
-                    generateGameId();
 
                     doWhile(false);
                     System.out.println(firstClient+ " started Gui");
@@ -91,30 +88,26 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     randomBoolean=false;
 
                     if(randomBoolean){
-                        map.put(Keys.FIRSTPLAYER, firstClient);
-                        map.put(Keys.SECONDPLAYER, secondClient);
+                        map.put(Keys.PLAYER_A, firstClient);
+                        map.put(Keys.PLAYER_B, secondClient);
                         System.out.println(secondClient+ " gewartet");
                         doWhile(false);
 
 
                     }else {
-                        map.put(Keys.FIRSTPLAYER, secondClient);
-                        map.put(Keys.SECONDPLAYER, firstClient);
+                        map.put(Keys.PLAYER_A, secondClient);
+                        map.put(Keys.PLAYER_B, firstClient);
                     }
                     System.out.println(secondClient+ " started Gui");
-
-
 
                 }
 
                 // Der, der als zweites das wait Verlässt kommt immer hier entlang
-                if (!map.isEmpty()) {
+                if (map.containsKey(Keys.GAMEID)) {
                     return addSecondPlayer(clientName);
                 }
-
                 //Der, der als erstes das wait verlässt, kommt immer hier entlang
                 return addfirstPlayer(clientName);
-
             }
         } finally {
             //TODO hier das finally befüllen
@@ -123,11 +116,6 @@ public class TicTacToeAImpl implements TicTacToeAService {
 private void doWhile(boolean thisPlayerFirst){
     do {
         try {
-            if (thisPlayerFirst) {
-                System.out.println("Client 1 macht wait");
-            } else {
-                System.out.println("Client 2 macht wait");
-            }
             lock.notify();
             lock.wait();
 
@@ -148,6 +136,7 @@ private void doWhile(boolean thisPlayerFirst){
 
         // Create a new Hashmap session with following values
         map.put(Keys.GAMESTATUS, gameStatus);
+        System.out.println("gameid = "+gameId);
         map.put(Keys.GAMEID, gameId);
         map.put(Keys.FRISTMOVE, firstMove);
         //map.put(Keys.FIRSTPLAYER, clientName);
@@ -157,35 +146,36 @@ private void doWhile(boolean thisPlayerFirst){
         map.put(Keys.CURRENTPLAYERSTURN,"");
         //System.out.println("Jetzt müsste der Erste dran sein");
 
-        return returnfindgameHashMap(gameId, secondClient, "your_move");
+        String opponent = map.get(Keys.PLAYER_B);
+
+        return returnfindgameHashMap(gameId, opponent, "your_move");
     }
 
     private HashMap<String,String> addSecondPlayer(String clientName){
         String gameStatus = "playing";
         String gameID = map.get(Keys.GAMEID);
-        String firstPlayer = map.get(Keys.FIRSTPLAYER);
-        String secondPlayer = map.get(Keys.SECONDPLAYER);
+        String firstPlayer = map.get(Keys.PLAYER_A);
+        String secondPlayer = map.get(Keys.PLAYER_B);
 
         // Randomly choose who begins
 
-        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
+        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer; // TODO brauchen wir das noch
         //String firstMove = thisPlayerFirst ? "your_move" : "opponent_move";
         String firstMove = "opponent_move";
         //System.out.println("Jetzt müsste der zweite dran");
-        map.put(Keys.GAMESTATUS, gameStatus);
-        map.put(Keys.SECONDPLAYER, clientName);
+        map.put(Keys.GAMESTATUS, gameStatus); // TODO brauchen wir das noch
+        //map.put(Keys.SECONDPLAYER, clientName);
         map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
-        map.put(Keys.FRISTMOVE, firstMove);
-        return returnfindgameHashMap(gameID, firstClient, "opponent_move");
+        map.put(Keys.FRISTMOVE, firstMove); // TODO brauchen wir das noch
+
+        String opponent = map.get(Keys.PLAYER_A);
+        return returnfindgameHashMap(gameID, opponent, "opponent_move");
     }
 
     public HashMap<String, String> returnfindgameHashMap(String gameID,String opponentName,String firstMove) {
         HashMap<String, String> returnMap = new HashMap<>();
         //if (map.get(Keys.GAMEID).equals(gameID)) {
 
-
-            String firstPlayer = map.get(Keys.FIRSTPLAYER);
-            String secondPlayer = map.get(Keys.SECONDPLAYER);
             //String move = map.get(Keys.MOVES);
 
             returnMap.put("Game ID", gameID);
@@ -199,9 +189,11 @@ private void doWhile(boolean thisPlayerFirst){
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
-
+        System.out.println("zeile 191");
+        if (map.get(Keys.GAMEID).equals(gameId)) {
+            System.out.println("zeile 191");
         lastMove = x + "," + y ;
-        allMoves.add(lastMove);
+        //allMoves.add(lastMove);
         System.out.println("Lastmove [" + x +"," + y + "]");
 
         synchronized (lock) {
@@ -218,52 +210,56 @@ private void doWhile(boolean thisPlayerFirst){
                 }
             }
         }
-
+            System.out.println("zeile 212");
         if(youLose){
             youLose = false;
             // TODO in der Methode resetGameInformtion()muss alles zurückgesetzt werden
             // resetGameInformtion()
             return "you_lose" + x + "," + y;
         }
-
+            System.out.println("zeile 219");
         String moves = map.get(Keys.MOVES);
+        System.out.println("moves = "+ moves);
         String currentplayerturn = map.get(Keys.CURRENTPLAYERSTURN);
-        String firstPlayer = map.get(Keys.FIRSTPLAYER);
-        String secondPlayer = map.get(Keys.SECONDPLAYER);
+        String firstPlayer = map.get(Keys.PLAYER_A);
+        String secondPlayer = map.get(Keys.PLAYER_B);
         //boolean isPlayer1Turn = currentPlayerTurn.getOrDefault(gameId, true);
-
+            System.out.println("zeile 225");
         if (isMoveValid(x, y, moves)) {
-            if (!moves.isEmpty()) {
-                moves += "|";
-            }
-            moves +="," + x + "," + y;
-
-
-            //if (isGameOver(x, y, moves)) {
-            if (isGameOver(lastMove)) {
-                youLose = true;
-                lock.notify();
-                return "you_win: " + x + "," + y;
-            } else {
+            moves=(moves.isEmpty())?  x + "," + y: moves + "|"+ x + "," + y;
+            map.put(Keys.MOVES, moves);
+            System.out.println(moves);
+            // check if game is over
+            if (isGameOver(moves)) {
+                map.put(Keys.WINNER, currentplayerturn);
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
-                //return x + "," + y;
+                return "you_win: " + x + "," + y;
             }
-            return lastMove;
+            // check if game is not over and there are less moves than 9
+            String[] moveArray = moves.split("\\|");
+            if(moveArray.length < 9) {
+                currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
+                map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
+                return x + "," + y;
+            }
+            // if game is over and there are 9 moves
+            map.put(Keys.WINNER, "draw");
+            return "you_lose: " + x + "," + y;
 
         } else {
             return "invalid_move";
         }
-        //return "game_does_not_exist";
-        //return lastMove;
+
+        }return "game_does_not_exist";
     }
 
 
 
     @Override
     public ArrayList<String> fullUpdate(String gameId) throws RemoteException {
-        String player_A=map.get(Keys.FIRSTPLAYER);
-        String player_B=map.get(Keys.SECONDPLAYER);
+        String player_A=map.get(Keys.PLAYER_A);
+        String player_B=map.get(Keys.PLAYER_B);
         boolean tmpbool = true;
         String moves=map.get(Keys.MOVES);
         String [] movesparts = moves.split("\\|");
@@ -292,28 +288,25 @@ private void doWhile(boolean thisPlayerFirst){
         return "Game" + random.nextInt(1000);
     }
 
-     public boolean isMoveValid(int x, int y,String moves) {
+    public boolean isMoveValid(int x, int y,String moves) {
 
         // Check if the move is out of bounds (0-2 for both x and y).
         if (x < 0 || x >= 3 || y < 0 || y >= 3) {
             return false; // Invalid move, out of bounds.
         }
+        String[] moveParts = moves.split("\\|");
+        if(moveParts.length==0){
+            return true;
+        }
 
-        // Convert the move coordinates into a single string for easy checking.
         // Split the "moves" string into individual move parts.
         String playerMove = x + "," + y;
-        //String[] moveParts = moves.split("\\|");
 
-        /*
         for (String part : moveParts) {
-            // Trim whitespace and extract the last 3 characters (assuming they represent "x,y").
-            part = part.trim();
-            part = part.substring(part.length() - 3);
             if (part.equals(playerMove)) {
                 return false; // Invalid move, playerMove already exists in the list of moves.
             }
         }
-        */
 
         return true; // Move is valid.
     }
@@ -388,37 +381,11 @@ private void doWhile(boolean thisPlayerFirst){
     }*/
 
 
-    private void signalOtherPlayer(String gameId) {
-        // Implement logic to signal the other player that it's their turn.
-        
-    }
-
-
-    public static List<String> splitStringToList(String input) {
-
-        List<String> resultList = new ArrayList<>();
-        String[] parts = input.split(",");
-        int n = parts.length;
-
-        for (int i = 0; i < n; i += 2) {
-            if (i + 1 < n) {
-                String pair = parts[i] + "," + parts[i + 1];
-                resultList.add(pair);
-            }
-        }
-        return resultList;
-    }
-
     private void resetGameInformtion(){
         firstClient = "";
         secondClient = "";
         map.clear();
     }
 
-    public static void main(String[] args) {
-        System.out.println("hello");
-        for (String string : splitStringToList("0,0,0,2,0,1,1,1")) {
-            System.out.println(string);
-        }
-    }
+
 }
