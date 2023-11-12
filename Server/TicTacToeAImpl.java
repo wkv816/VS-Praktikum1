@@ -79,41 +79,54 @@ public class TicTacToeAImpl implements TicTacToeAService {
             // Bevor die hier hin kommen sollen die von sowas wie einem Semaphor oder so blockiert werden
             synchronized (lock) {
                 boolean iAmSecond;
+
                 if (firstClient.isEmpty()) {
                     firstClient = clientName;
 
-                    boolean thisPlayerFirst = random.nextBoolean();
+                    //boolean thisPlayerFirst = random.nextBoolean();
+                    boolean thisPlayerFirst = true;
                     iAmSecond = thisPlayerFirst;
                     generateGameId();
-                    while (playerCounter < 3 || iAmSecond) {
+
+                    do {
                         try {
                             System.out.println("Client 1 macht wait");
                             playerCounter++;
                             lock.notify();
-                            lock.wait();
-
+                            lock.wait();  // 1. Client wartet hier
+                            System.out.println("");
                         } catch (InterruptedException e) {
                             // Handle InterruptedException
                         }
-                    }
+                    } while (iAmSecond);
+
+                    iAmSecond = !thisPlayerFirst;
+                    System.out.println("1 Client ist draußen");
                 } else if (secondClient.isEmpty()) {
                     secondClient = clientName;
+                    boolean thisPlayerFirst = random.nextBoolean();
                     iAmSecond = thisPlayerFirst;
 
-                    while (playerCounter < 3 || !iAmSecond) {
+                    do {
                         try {
-
                             System.out.println("Client 2 macht wait");
                             playerCounter++;
+                            thisPlayerFirst = random.nextBoolean();
+
                             lock.notify();
                             lock.wait();
                             playerCounter++;
+                            System.out.println("");
                         } catch (InterruptedException e) {
                             // Handle InterruptedException
                         }
-                    }
+                    } while (!iAmSecond);
+
+                    iAmSecond = !thisPlayerFirst;
+                    System.out.println("2 Client ist draußen");
                 }
-                iAmSecond = !thisPlayerFirst;
+
+
 
                 // else if --> Clientname gibt es schon
                     // dann nicht blockieren sondern
@@ -266,9 +279,9 @@ public class TicTacToeAImpl implements TicTacToeAService {
             } else {
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
-                return x + "," + y;
+                //return x + "," + y;
             }
-            //return lastMove;
+            return lastMove;
 
         } else {
             return "invalid_move";
