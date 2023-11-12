@@ -52,14 +52,9 @@ public class TicTacToeAImpl implements TicTacToeAService {
     // "Game ID", "Opponent Name", "First Move", "Move"
 
     private final Object lock = new Object();
-    private final Object lock2 = new Object();
-
-    private final Lock mutex = new ReentrantLock();
 
     private String firstClient = "";
     private String secondClient = "";
-    private int playerCounter = 0;
-    private boolean firstPlayerMadeMove = false;
     private String lastMove = "";
 
     private HashMap<Keys, String> map = new HashMap<>();
@@ -84,131 +79,104 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     firstClient = clientName;
 
                     //boolean thisPlayerFirst = random.nextBoolean();
-                    boolean thisPlayerFirst = true;
-                    iAmSecond = thisPlayerFirst;
+                    thisPlayerFirst = true;
                     generateGameId();
 
-                    do {
-                        try {
-                            System.out.println("Client 1 macht wait");
-                            playerCounter++;
-                            lock.notify();
-                            lock.wait();  // 1. Client wartet hier
-                            System.out.println("");
-                        } catch (InterruptedException e) {
-                            // Handle InterruptedException
-                        }
-                    } while (iAmSecond);
+                    doWhile(false);
+                    System.out.println(firstClient+ " started Gui");
 
-                    iAmSecond = !thisPlayerFirst;
-                    System.out.println("1 Client ist draußen");
                 } else if (secondClient.isEmpty()) {
                     secondClient = clientName;
-                    boolean thisPlayerFirst = random.nextBoolean();
-                    iAmSecond = thisPlayerFirst;
+                    boolean randomBoolean= random.nextBoolean();
+                    randomBoolean=false;
 
-                    do {
-                        try {
-                            System.out.println("Client 2 macht wait");
-                            playerCounter++;
-                            thisPlayerFirst = random.nextBoolean();
+                    if(randomBoolean){
+                        map.put(Keys.FIRSTPLAYER, firstClient);
+                        map.put(Keys.SECONDPLAYER, secondClient);
+                        System.out.println(secondClient+ " gewartet");
+                        doWhile(false);
 
-                            lock.notify();
-                            lock.wait();
-                            playerCounter++;
-                            System.out.println("");
-                        } catch (InterruptedException e) {
-                            // Handle InterruptedException
-                        }
-                    } while (!iAmSecond);
 
-                    iAmSecond = !thisPlayerFirst;
-                    System.out.println("2 Client ist draußen");
+                    }else {
+                        map.put(Keys.FIRSTPLAYER, secondClient);
+                        map.put(Keys.SECONDPLAYER, firstClient);
+                    }
+                    System.out.println(secondClient+ " started Gui");
+
+
+
                 }
-
-
-
-                // else if --> Clientname gibt es schon
-                    // dann nicht blockieren sondern
-                    // return returnfindgameHashMap(gameID, firstPlayerName, "your_opponent");
-
 
                 // Der, der als zweites das wait Verlässt kommt immer hier entlang
                 if (!map.isEmpty()) {
-
-                    String gameStatus = "playing";
-                    String gameID = map.get(Keys.GAMEID);
-                    String firstPlayer = map.get(Keys.FIRSTPLAYER);
-                    String secondPlayer = map.get(Keys.SECONDPLAYER);
-
-                    // Randomly choose who begins
-
-                    String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
-                    //String firstMove = thisPlayerFirst ? "your_move" : "opponent_move";
-                    String firstMove = "opponent_move";
-                    //System.out.println("Jetzt müsste der zweite dran");
-                    map.put(Keys.GAMESTATUS, gameStatus);
-                    map.put(Keys.SECONDPLAYER, clientName);
-                    map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
-                    map.put(Keys.FRISTMOVE, firstMove);
-
-                    return returnfindgameHashMap(gameID, firstClient, "opponent_move");
+                    return addSecondPlayer(clientName);
                 }
 
                 //Der, der als erstes das wait verlässt, kommt immer hier entlang
-                String gameId = generateGameId();
-                String gameStatus= "waiting-for-player";
-                String firstMove= "";
-
-
-                // Create a new Hashmap session with following values
-                map.put(Keys.GAMESTATUS, gameStatus);
-                map.put(Keys.GAMEID, gameId);
-                map.put(Keys.FRISTMOVE, firstMove);
-                map.put(Keys.FIRSTPLAYER, clientName);
-                map.put(Keys.MOVES, "");
-                map.put(Keys.SECONDPLAYER, "");
-                map.put(Keys.WINNER, "");
-                map.put(Keys.CURRENTPLAYERSTURN,"");
-                //System.out.println("Jetzt müsste der Erste dran sein");
-
-                return returnfindgameHashMap(gameId, secondClient, "your_move");
-
-
-                /*
-                String gameID = generateGameId();
-                String opponentName = secondPlayerName;
-                String firstPlayer = "your_move";
-                String move = "";
-
-
-                HashMap<String, String> tmpMap = new HashMap<>();
-                tmpMap.put("Game ID", gameID);
-                tmpMap.put("Opponent Name", opponentName);
-                tmpMap.put("First Move", firstPlayer);
-                tmpMap.put("Move", move);
-
-                return tmpMap;*/
-
-                /*else {
-                    String gameID = "tmpTestGameID";
-                    String opponentName = firstPlayerName;
-                    String firstPlayer = "opponent_move";
-                    String move = lastMove;
-
-
-                    HashMap<String, String> tmpMap = new HashMap<>();
-                    tmpMap.put("Game ID", gameID);
-                    tmpMap.put("Opponent Name", opponentName);
-                    tmpMap.put("First Move", firstPlayer);
-                    tmpMap.put("Move", move);
-                    return tmpMap;
-                }*/
+                return addfirstPlayer(clientName);
 
             }
         } finally {
             //TODO hier das finally befüllen
         }
+    }
+private void doWhile(boolean thisPlayerFirst){
+    do {
+        try {
+            if (thisPlayerFirst) {
+                System.out.println("Client 1 macht wait");
+            } else {
+                System.out.println("Client 2 macht wait");
+            }
+            lock.notify();
+            lock.wait();
+
+            //thisPlayerFirst=!thisPlayerFirst;
+
+        } catch (InterruptedException e) {
+            // Handle InterruptedException
+        }
+    } while (thisPlayerFirst);
+
+}
+    private HashMap<String,String> addfirstPlayer(String clientName){
+        //Der, der als erstes das wait verlässt, kommt immer hier entlang
+        String gameId = generateGameId();
+        String gameStatus= "waiting-for-player";
+        String firstMove= "";
+
+
+        // Create a new Hashmap session with following values
+        map.put(Keys.GAMESTATUS, gameStatus);
+        map.put(Keys.GAMEID, gameId);
+        map.put(Keys.FRISTMOVE, firstMove);
+        //map.put(Keys.FIRSTPLAYER, clientName);
+        //map.put(Keys.MOVES, "");
+        //map.put(Keys.SECONDPLAYER, "");
+        map.put(Keys.WINNER, "");
+        map.put(Keys.CURRENTPLAYERSTURN,"");
+        //System.out.println("Jetzt müsste der Erste dran sein");
+
+        return returnfindgameHashMap(gameId, secondClient, "your_move");
+    }
+
+    private HashMap<String,String> addSecondPlayer(String clientName){
+        String gameStatus = "playing";
+        String gameID = map.get(Keys.GAMEID);
+        String firstPlayer = map.get(Keys.FIRSTPLAYER);
+        String secondPlayer = map.get(Keys.SECONDPLAYER);
+
+        // Randomly choose who begins
+
+        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
+        //String firstMove = thisPlayerFirst ? "your_move" : "opponent_move";
+        String firstMove = "opponent_move";
+        //System.out.println("Jetzt müsste der zweite dran");
+        map.put(Keys.GAMESTATUS, gameStatus);
+        map.put(Keys.SECONDPLAYER, clientName);
+        map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
+        map.put(Keys.FRISTMOVE, firstMove);
+        return returnfindgameHashMap(gameID, firstClient, "opponent_move");
     }
 
     public HashMap<String, String> returnfindgameHashMap(String gameID,String opponentName,String firstMove) {
@@ -242,7 +210,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
             while (i < 1) {
                 try {
                     i++;
-                    firstPlayerMadeMove=true;
+                    //firstPlayerMadeMove=true;
                     lock.notify();
                     lock.wait();
                 } catch (InterruptedException e) {
