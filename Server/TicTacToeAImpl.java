@@ -225,12 +225,15 @@ private void doWhile(boolean thisPlayerFirst){
         String secondPlayer = map.get(Keys.PLAYER_B);
         //boolean isPlayer1Turn = currentPlayerTurn.getOrDefault(gameId, true);
             System.out.println("zeile 225");
+
         if (isMoveValid(x, y, moves)) {
             moves=(moves.isEmpty())?  x + "," + y: moves + "|"+ x + "," + y;
             map.put(Keys.MOVES, moves);
             System.out.println(moves);
             // check if game is over
             if (isGameOver(moves)) {
+                youLose = true;
+                lock.notify();
                 map.put(Keys.WINNER, currentplayerturn);
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
@@ -241,7 +244,9 @@ private void doWhile(boolean thisPlayerFirst){
             if(moveArray.length < 9) {
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
-                return x + "," + y;
+                return lastMove;
+
+                //return x + "," + y;
             }
             // if game is over and there are 9 moves
             map.put(Keys.WINNER, "draw");

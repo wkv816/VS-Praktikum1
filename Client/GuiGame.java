@@ -46,12 +46,13 @@ public class GuiGame implements ActionListener{
         firstPlayer(firstMove);
         ArrayList<String> currentGameField = ticTacToeAService.fullUpdate(gameID);
 
-        if(!currentGameField.isEmpty()){
-            //TODO Das Gamefield auf die GUI bringen
-            // Name Prüfen am ende des Stings und das Zeichen suchen
-            // Erster spieler hat hier immer ein "X"
-
-        }else if(!move.equals("")) {
+//        if(!currentGameField.isEmpty()){
+//            //TODO Das Gamefield auf die GUI bringen
+//            // Name Prüfen am ende des Stings und das Zeichen suchen
+//            // Erster spieler hat hier immer ein "X"
+//
+//        }else
+            if(!move.equals("")) {
             int x = Integer.parseInt(move.substring(0,1));
             int y = Integer.parseInt(move.substring(2,3));
             System.out.println(" x: " + x + " und y: " +y);
@@ -104,6 +105,7 @@ public class GuiGame implements ActionListener{
             opponentAwnser = tttAService.makeMove(i, j,gameID);
 
             if (opponentAwnser.startsWith("you_win") || opponentAwnser.startsWith("you_lose")) {
+
                 System.out.println("Spiel beendet: " + opponentAwnser);
                 frame.dispose(); // Beendet die GUI
             }
@@ -118,9 +120,13 @@ public class GuiGame implements ActionListener{
                     System.out.println("opponentAwnser: 'invalid_move'");
                 default:
                     // "x,y;
-                    int x = Integer.parseInt(opponentAwnser.substring(0,1));
-                    int y = Integer.parseInt(opponentAwnser.substring(2,3));
+                    //int x = Integer.parseInt(opponentAwnser.substring(0,1));
+                    //int y = Integer.parseInt(opponentAwnser.substring(2,3));
+                    int x=Character.getNumericValue(opponentAwnser.charAt(0));
+                    int y=Character.getNumericValue(opponentAwnser.charAt(2));
                     System.out.println("Coordinaten Button[" + x + "][" + y + "] von Opponent bekommen");
+                    System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"
+                    +Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
                     //Thread thread = new Thread(() -> {
                         playerMove(x,y,!isFirstPlayer);
                     //});
