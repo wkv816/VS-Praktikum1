@@ -140,7 +140,7 @@ private void doWhile(boolean thisPlayerFirst){
         map.put(Keys.GAMEID, gameId);
         map.put(Keys.FRISTMOVE, firstMove);
         //map.put(Keys.FIRSTPLAYER, clientName);
-        //map.put(Keys.MOVES, "");
+        map.put(Keys.MOVES, "");
         //map.put(Keys.SECONDPLAYER, "");
         map.put(Keys.WINNER, "");
         map.put(Keys.CURRENTPLAYERSTURN,"");
