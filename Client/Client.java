@@ -52,9 +52,7 @@ public class Client {
             System.out.println("client side error: " + e);
         }
 
-         */
-
-        /*
+         
         //TicTacToeGame ticTacToe = new TicTacToeGame();
         Boolean scannerOn = false;
         String opponent_name;

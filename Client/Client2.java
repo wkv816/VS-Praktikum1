@@ -15,9 +15,9 @@ public class Client2 {
     public static void main(String[] args) {
 
         ClientPlayer client1 = new ClientPlayer("Tommy2");
-
-        //TicTacToeGame ticTacToe = new TicTacToeGame();
     /*
+        //TicTacToeGame ticTacToe = new TicTacToeGame();
+    
         try {
             System.out.println("client started");
 

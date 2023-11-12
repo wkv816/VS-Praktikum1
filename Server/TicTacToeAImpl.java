@@ -6,19 +6,26 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 public class TicTacToeAImpl implements TicTacToeAService {
 
     private HashMap <Keys, String> map= new HashMap<>();
     private Random random = new Random();
+    private Queue<String> playerQueue = new LinkedList<>();
+    private Timer timer;
     public enum Keys {
         GAMESTATUS,
         GAMEID,
         FRISTMOVE,
         MOVES,
-        PALYER_A,
+        PLAYER_A,
         PLAYER_B,
         WINNER,
         CURRENTPLAYERSTURN
@@ -28,12 +35,39 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
+        boolean gameSesionExists=map.containsKey(Keys.GAMEID);
+        
         // A game is found if there is a waiting-for-player game with no opponent yet  
 
-        if (map.containsKey(Keys.GAMESTATUS)) {
-            if (map.get(Keys.GAMESTATUS).equals("waiting-for-player")) {
+        if (gameSesionExists) {
 
-                String gameStatus="playing";
+            boolean secondPlayerExists=!map.get(Keys.GAMESTATUS).equals("waiting-for-player");
+
+            if (!secondPlayerExists) {
+                addsecondplayer(clientName);
+            }
+            String player_A=map.get(Keys.PLAYER_A);
+            String player_B = map.get(Keys.PLAYER_B);
+
+            boolean clientAlreadyInGameSession= (player_A.equals(clientName))||(player_B.equals(clientName));
+
+            if (clientAlreadyInGameSession) {
+                
+            }
+
+            
+            
+        }
+        System.out.println("First client name "+ clientName);
+        
+
+        // No game found, create a new one in "waiting-for-player" state
+        return addFirstPlayer(clientName);
+
+    }
+    private HashMap<String, String>  addsecondplayer(String clientName){
+
+        String gameStatus="playing";
                 String gameID= map.get(Keys.GAMEID);
 
                 
@@ -45,33 +79,28 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 String firstMove=yourOrOpponentMove(clientName);
                 map.put(Keys.FRISTMOVE, firstMove);
 
-            
+                startTimer();
 
                 System.out.println("Second client name "+ clientName);
 
                 System.out.println("curent turn player "+ map.get(Keys.CURRENTPLAYERSTURN));
 
                 return returnfindgameHashMap(gameID, clientName, gameStatus, firstMove);
-            }
-        }
-        System.out.println("First client name "+ clientName);
-        
-
-        // No game found, create a new one in "waiting-for-player" state
-        return creatGameSession(clientName);
 
     }
+
+    
     private String yourOrOpponentMove(String clientName){
         // Randomly choose who begins
         boolean thisPlayerFirst = random.nextBoolean();
         String firstMove = thisPlayerFirst ? "your_move" : "your_opponent";
-        String player_A= map.get(Keys.PALYER_A);
+        String player_A= map.get(Keys.PLAYER_A);
         String player_B= map.get(Keys.PLAYER_B);
 
         String currentPlayer = thisPlayerFirst ? player_A : player_B;
 
         if (!(currentPlayer==player_A)){
-            map.put(Keys.PALYER_A, player_B);
+            map.put(Keys.PLAYER_A, player_B);
             map.put(Keys.PLAYER_B, player_A);
             map.put(Keys.CURRENTPLAYERSTURN, player_A);
             
@@ -85,14 +114,15 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
-
+        
         if (map.get(Keys.GAMEID).equals(gameId)) {
-            
+            resetTimer();
+            System.out.println("makemove invoked reset timer");
             String moves = map.get(Keys.MOVES);
             
             
             String currentplayerturn= map.get(Keys.CURRENTPLAYERSTURN);
-            String firstPlayer = map.get(Keys.PALYER_A);
+            String firstPlayer = map.get(Keys.PLAYER_A);
             String secondPlayer = map.get(Keys.PLAYER_B);
             // check if move is valid.
             if (isMoveValid(x, y, moves)) {
@@ -135,7 +165,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
             list.add(map.get(Keys.GAMEID));
             list.add(map.get(Keys.FRISTMOVE));
             list.add(map.get(Keys.MOVES));
-            list.add(map.get(Keys.PALYER_A));
+            list.add(map.get(Keys.PLAYER_A));
             list.add(map.get(Keys.PLAYER_B));
             list.add(map.get(Keys.WINNER));
             list.add(map.get(Keys.CURRENTPLAYERSTURN));
@@ -152,7 +182,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         return "Game" + random.nextInt(1000);
     }
 
-    private HashMap<String, String> creatGameSession(String clientName) {
+    private HashMap<String, String> addFirstPlayer(String clientName) {
 
         // Create a new gameID
         String gameId = generateGameId();
@@ -164,7 +194,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         map.put(Keys.GAMESTATUS, gameStatus);
         map.put(Keys.GAMEID, gameId);
         map.put(Keys.FRISTMOVE, firstMove);
-        map.put(Keys.PALYER_A, clientName);
+        map.put(Keys.PLAYER_A, clientName);
         map.put(Keys.MOVES, "");
         map.put(Keys.PLAYER_B, "");
         map.put(Keys.WINNER, "");
@@ -179,7 +209,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
         if (map.get(Keys.GAMEID).equals(gameID)) {
 
-            String player_A = map.get(Keys.PALYER_A);
+            String player_A = map.get(Keys.PLAYER_A);
             String player_B = map.get(Keys.PLAYER_B);
             String opponentName = (player_B.equals("")) ? "no_opponent_found" : (player_A.equals(clientName)) ? player_B : player_A;
             String move = map.get(Keys.MOVES);
@@ -197,7 +227,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
     }
 
     public boolean isMoveValid(int x, int y,String moves) {
-
+    
         // Check if the move is out of bounds (0-2 for both x and y).
         if (x < 0 || x >= 3 || y < 0 || y >= 3) {
             return false; // Invalid move, out of bounds.
@@ -326,9 +356,46 @@ public class TicTacToeAImpl implements TicTacToeAService {
     public static void main(String[] args) {
 
         System.out.println("Server started");
-            
         
-        
+    }
+
+    private void startTimer() {
+        // Start or reset the timer to clear players if makeMove is not called within 30 seconds.
+        if (timer != null) {
+            timer.cancel();
+        }
+        System.out.println("Timer started.");
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Timer expired. Clearing players.");
+                clearPlayers();
+            }
+        }, 10000);
+    }
+    private void resetTimer() {
+        // Reset the timer when makeMove is called.
+        if (timer != null) {
+            timer.cancel();
+            startTimer();  // Restart the timer after canceling it.
+        }
+    }
+
+    private void stopTimer() {
+        // Stop the timer when the second player joins the game.
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+
+    private void clearPlayers() {
+        // Clear players and reset the queue.
+        map.put(Keys.PLAYER_A, "");
+        map.put(Keys.PLAYER_B, "");
+        playerQueue.clear();
+        System.out.println("Players cleared.");
     }
 
 
