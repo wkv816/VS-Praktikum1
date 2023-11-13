@@ -46,13 +46,12 @@ public class GuiGame implements ActionListener{
         firstPlayer(firstMove);
         ArrayList<String> currentGameField = ticTacToeAService.fullUpdate(gameID);
 
-//        if(!currentGameField.isEmpty()){
-//            //TODO Das Gamefield auf die GUI bringen
-//            // Name Prüfen am ende des Stings und das Zeichen suchen
-//            // Erster spieler hat hier immer ein "X"
-//
-//        }else
-            if(!move.equals("")) {
+        /*if(!currentGameField.isEmpty()){
+            //TODO Das Gamefield auf die GUI bringen
+            // Name Prüfen am ende des Stings und das Zeichen suchen
+            // Erster spieler hat hier immer ein "X"
+
+        }else*/ if(!move.equals("")) {
             int x = Integer.parseInt(move.substring(0,1));
             int y = Integer.parseInt(move.substring(2,3));
             System.out.println(" x: " + x + " und y: " +y);
@@ -105,7 +104,6 @@ public class GuiGame implements ActionListener{
             opponentAwnser = tttAService.makeMove(i, j,gameID);
 
             if (opponentAwnser.startsWith("you_win") || opponentAwnser.startsWith("you_lose")) {
-
                 System.out.println("Spiel beendet: " + opponentAwnser);
                 frame.dispose(); // Beendet die GUI
             }

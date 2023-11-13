@@ -5,6 +5,7 @@ import Regestry.TicTacToeAService;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 public class TicTacToeAImpl implements TicTacToeAService {
 
@@ -64,12 +65,15 @@ public class TicTacToeAImpl implements TicTacToeAService {
     private boolean thisPlayerFirst = false;
 
     private boolean isYourTurn;
+
+    private static final Semaphore semaphore = new Semaphore(2, true);
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
         isYourTurn = true; // hier muss irgendwas mit random hin
 
         try {
             // Bevor die hier hin kommen sollen die von sowas wie einem Semaphor oder so blockiert werden
+            semaphore.acquire();
             synchronized (lock) {
                 boolean iAmSecond;
 
@@ -109,6 +113,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 //Der, der als erstes das wait verlässt, kommt immer hier entlang
                 return addfirstPlayer(clientName);
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             //TODO hier das finally befüllen
         }
@@ -225,7 +231,6 @@ private void doWhile(boolean thisPlayerFirst){
         String secondPlayer = map.get(Keys.PLAYER_B);
         //boolean isPlayer1Turn = currentPlayerTurn.getOrDefault(gameId, true);
             System.out.println("zeile 225");
-
         if (isMoveValid(x, y, moves)) {
             moves=(moves.isEmpty())?  x + "," + y: moves + "|"+ x + "," + y;
             map.put(Keys.MOVES, moves);
@@ -390,7 +395,8 @@ private void doWhile(boolean thisPlayerFirst){
         firstClient = "";
         secondClient = "";
         map.clear();
+
+        semaphore.release();
+        semaphore.release();
     }
-
-
 }
