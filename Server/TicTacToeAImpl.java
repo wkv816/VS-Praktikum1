@@ -195,36 +195,18 @@ private void doWhile(boolean thisPlayerFirst){
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
-        System.out.println("zeile 191");
-        if (map.get(Keys.GAMEID).equals(gameId)) {
-            System.out.println("zeile 191");
-        lastMove = x + "," + y ;
-        //allMoves.add(lastMove);
-        System.out.println("Lastmove [" + x +"," + y + "]");
-
-        synchronized (lock) {
-            int i = 0;
-
-            while (i < 1) {
-                try {
-                    i++;
-                    //firstPlayerMadeMove=true;
-                    lock.notify();
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    // Handle InterruptedException
-                }
-            }
-        }
-            System.out.println("zeile 212");
-        if(youLose){
-            youLose = false;
-            // TODO in der Methode resetGameInformtion()muss alles zurückgesetzt werden
-            // resetGameInformtion()
-            return "you_lose" + x + "," + y;
-        }
-            System.out.println("zeile 219");
+        boolean gameSessionExists=map.get(Keys.GAMEID).equals(gameId);
         String moves = map.get(Keys.MOVES);
+        synchronized (lock) {
+
+        if (gameSessionExists) {
+            lastMove = x + "," + y ;
+
+
+
+
+            System.out.println("zeile 219");
+
         System.out.println("moves = "+ moves);
         String currentplayerturn = map.get(Keys.CURRENTPLAYERSTURN);
         String firstPlayer = map.get(Keys.PLAYER_A);
@@ -237,6 +219,7 @@ private void doWhile(boolean thisPlayerFirst){
             System.out.println(moves);
             // check if game is over
             if (isGameOver(moves)) {
+                System.out.println( "game over lastmove = " + lastMove);
                 youLose = true;
                 lock.notify();
                 map.put(Keys.WINNER, currentplayerturn);
@@ -249,11 +232,18 @@ private void doWhile(boolean thisPlayerFirst){
             if(moveArray.length < 9) {
                 currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                 map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
+                makeMoveWaiting();
+                System.out.println("youtlose = " + youLose);
+                if(youLose){
+                    youLose = false;
+                    //resetGameInformtion();
+                    return "you_lose: " + lastMove;
+                }
                 return lastMove;
-
                 //return x + "," + y;
             }
             // if game is over and there are 9 moves
+
             map.put(Keys.WINNER, "draw");
             return "you_lose: " + x + "," + y;
 
@@ -262,6 +252,25 @@ private void doWhile(boolean thisPlayerFirst){
         }
 
         }return "game_does_not_exist";
+        }
+    }
+
+    private void makeMoveWaiting(){
+
+            int i = 0;
+
+            while (i < 1) {
+                try {
+                    i++;
+                    //firstPlayerMadeMove=true;
+                    lock.notify();
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    // Handle InterruptedException
+                }
+            }
+
+
     }
 
 

@@ -9,6 +9,8 @@ import javax.swing.*;
 public class GuiGame implements ActionListener{
 
 
+    private String firstPlayer;
+    private String secondPlayer;
     private TicTacToeAService tttAService;
     private String gameID;
     private String name;
@@ -45,6 +47,13 @@ public class GuiGame implements ActionListener{
         System.out.println("firstMove: " + firstMove);
         firstPlayer(firstMove);
         ArrayList<String> currentGameField = ticTacToeAService.fullUpdate(gameID);
+        if(firstMove.equals("your_move")){
+            firstPlayer = name;
+            secondPlayer = opponent_name;
+        } else{
+            firstPlayer = opponent_name;
+            secondPlayer = name;
+        }
 
         /*if(!currentGameField.isEmpty()){
             //TODO Das Gamefield auf die GUI bringen
@@ -57,8 +66,6 @@ public class GuiGame implements ActionListener{
             System.out.println(" x: " + x + " und y: " +y);
             playerMove(x,y,!isFirstPlayer);
         }
-
-        //buttons[2][2].doClick();
 
     }
 
@@ -85,16 +92,19 @@ public class GuiGame implements ActionListener{
     }
 
     private void playerMove(int i, int j,boolean bool){
+        String playerturn="";
 
         if (bool) {
             buttons[i][j].setForeground(new Color(255, 0, 0));
             buttons[i][j].setText("X");
-            textfield.setText((opponent_name + "'s turn"));
+            playerturn=secondPlayer;
         } else {
             buttons[i][j].setForeground(new Color(0, 0, 255));
             buttons[i][j].setText("O");
-            textfield.setText((name + "'s turn"));
+            playerturn=firstPlayer;
         }
+        textfield.setText("PN="+ name + " "+"ON= "+ opponent_name +
+                " Turn= "+ playerturn);
     }
 
     private void gameMoves(int i, int j) {
@@ -102,10 +112,11 @@ public class GuiGame implements ActionListener{
             setEnabledAllButtons(false);
             String opponentAwnser;
             opponentAwnser = tttAService.makeMove(i, j,gameID);
+            System.out.println("opponent Answer = " + opponentAwnser);
 
-            if (opponentAwnser.startsWith("you_win") || opponentAwnser.startsWith("you_lose")) {
-                System.out.println("Spiel beendet: " + opponentAwnser);
-                frame.dispose(); // Beendet die GUI
+            if (opponentAwnser.startsWith("you") ){
+                textfield.setText(opponentAwnser);
+                return;
             }
             switch (opponentAwnser){
                 case "opponent_gone": // Spiel ist zu ende
@@ -117,12 +128,10 @@ public class GuiGame implements ActionListener{
                 case "invalid_move":
                     System.out.println("opponentAwnser: 'invalid_move'");
                 default:
-                    // "x,y;
-                    //int x = Integer.parseInt(opponentAwnser.substring(0,1));
-                    //int y = Integer.parseInt(opponentAwnser.substring(2,3));
+
                     int x=Character.getNumericValue(opponentAwnser.charAt(0));
                     int y=Character.getNumericValue(opponentAwnser.charAt(2));
-                    System.out.println("Coordinaten Button[" + x + "][" + y + "] von Opponent bekommen");
+
                     System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"
                     +Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
                     //Thread thread = new Thread(() -> {
@@ -161,14 +170,14 @@ public class GuiGame implements ActionListener{
 
     private void creatGUI() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800,800);
+        frame.setSize(350,400);
         frame.getContentPane().setBackground(new Color(50,50,50));
         frame.setLayout(new BorderLayout());
         frame.setVisible(true);
 
         textfield.setBackground(new Color(25,25,25));
         textfield.setForeground(new Color(255,192,203));
-        textfield.setFont(new Font("Arial",Font.BOLD,75));
+        textfield.setFont(new Font("Arial",Font.BOLD,15));
         textfield.setHorizontalAlignment(JLabel.CENTER);
         textfield.setText("Tic Tac Toe");
         textfield.setOpaque(true);
