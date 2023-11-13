@@ -58,18 +58,16 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private HashMap<Keys, String> map = new HashMap<>();
 
-    private ArrayList<String> allMoves = new ArrayList<>();
+    //private ArrayList<String> allMoves = new ArrayList<>();
 
     private boolean youLose = false;
 
     private boolean thisPlayerFirst = false;
 
-    private boolean isYourTurn;
 
     private static final Semaphore semaphore = new Semaphore(2, true);
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
-        isYourTurn = true; // hier muss irgendwas mit random hin
 
         try {
             // Bevor die hier hin kommen sollen die von sowas wie einem Semaphor oder so blockiert werden
@@ -236,7 +234,7 @@ private void doWhile(boolean thisPlayerFirst){
                 System.out.println("youtlose = " + youLose);
                 if(youLose){
                     youLose = false;
-                    //resetGameInformtion();
+                    resetGameInformation();
                     return "you_lose: " + lastMove;
                 }
                 return lastMove;
@@ -400,12 +398,14 @@ private void doWhile(boolean thisPlayerFirst){
     }*/
 
 
-    private void resetGameInformtion(){
+    private void resetGameInformation(){
+        System.out.println("Game wurde resetet");
         firstClient = "";
         secondClient = "";
         map.clear();
 
         semaphore.release();
         semaphore.release();
+        System.out.println("Anzahl der Semapore ist jetzt: " + semaphore.availablePermits() );
     }
 }
