@@ -14,7 +14,8 @@ public class GuiGame implements ActionListener{
     private TicTacToeAService tttAService;
     private String gameID;
     private String name;
-    private String opponent_name = "Otto";
+    private String opponent_name;
+
     private String firstMove;
     private String move;
 
@@ -193,7 +194,7 @@ public class GuiGame implements ActionListener{
             for (int j = 0; j < 3; j++) {
                 buttons[i][j] = new JButton();
                 button_panel.add(buttons[i][j]);
-                buttons[i][j].setFont(new Font("MV Boli", Font.BOLD, 120));
+                buttons[i][j].setFont(new Font("MV Boli", Font.BOLD, 50));
                 buttons[i][j].setFocusable(false);
                 buttons[i][j].addActionListener(this);
             }

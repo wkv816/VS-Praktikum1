@@ -7,7 +7,7 @@ public class client3 {
 
     public static void main(String[] args) {
 
-        ClientPlayer client3 = new ClientPlayer("Auto3");
+        ClientPlayer client3 = new ClientPlayer("Otto3");
 
 
 
