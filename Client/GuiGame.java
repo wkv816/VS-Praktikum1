@@ -116,6 +116,12 @@ public class GuiGame implements ActionListener{
             System.out.println("opponent Answer = " + opponentAwnser);
 
             if (opponentAwnser.startsWith("you") ){
+                if (opponentAwnser.startsWith("you_lose:")){
+                    int lose_X=Character.getNumericValue(opponentAwnser.charAt(10));
+                    int lose_Y=Character.getNumericValue(opponentAwnser.charAt(12));
+                    playerMove(lose_X, lose_Y, !isFirstPlayer);
+                }
+                
                 textfield.setText(opponentAwnser);
                 return;
             }

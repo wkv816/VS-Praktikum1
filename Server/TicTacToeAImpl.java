@@ -11,7 +11,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     //private HashMap<String, String> gameMap = new HashMap<>();
     private ArrayList<HashMap<Keys, String>> gameArrayList = new ArrayList<>();
-    //private HashMap<String, String> returnfindgameHashMap = new HashMap<>();
+    private Timer timer;
     private HashMap<String, Boolean> currentPlayerTurn = new HashMap<>();
     private Random random = new Random();
     private Map<String, String> clientSessionRegistry = new ConcurrentHashMap<>();
@@ -161,6 +161,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
         map.put(Keys.FRISTMOVE, firstMove); // TODO brauchen wir das noch
 
         String opponent = map.get(Keys.PLAYER_A);
+
+        startTimer();
         return returnfindgameHashMap(gameID, opponent, "opponent_move");
     }
 
@@ -175,11 +177,13 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
+        
         boolean gameSessionExists=map.get(Keys.GAMEID).equals(gameId);
         String moves = map.get(Keys.MOVES);
         synchronized (lock) {
 
             if (gameSessionExists) {
+                resetTimer();
                 lastMove = x + "," + y ;
                 String currentplayerturn = map.get(Keys.CURRENTPLAYERSTURN);
                 String firstPlayer = map.get(Keys.PLAYER_A);
@@ -327,4 +331,50 @@ public class TicTacToeAImpl implements TicTacToeAService {
         semaphore.release();
         System.out.println("Anzahl der Semapore ist jetzt: " + semaphore.availablePermits() );
     }
+
+
+    private void startTimer() {
+        // Start or reset the timer to clear players if makeMove is not called within 30 seconds.
+        if (timer != null) {
+            timer.cancel();
+        }
+        System.out.println("Timer started.");
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Timer expired. Clearing players.");
+                try {
+                    resetGameInformation();
+                } catch (RemoteException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }, 10000);
+    }
+    private void resetTimer() {
+        // Reset the timer when makeMove is called.
+        if (timer != null) {
+            timer.cancel();
+            startTimer();  // Restart the timer after canceling it.
+        }
+    }
+
+    private void stopTimer() {
+        // Stop the timer when the second player joins the game.
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+
+
+
+
+
+
+
+
+
 }

@@ -1,9 +1,5 @@
 package Client;
 
-import Regestry.TicTacToeAService;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.Map;
 
 public class Client2 {
 
