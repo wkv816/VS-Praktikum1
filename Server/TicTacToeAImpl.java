@@ -12,6 +12,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
     //private HashMap<String, String> gameMap = new HashMap<>();
     private ArrayList<HashMap<Keys, String>> gameArrayList = new ArrayList<>();
     private Timer timer;
+    private boolean timeout = false;
+
     private HashMap<String, Boolean> currentPlayerTurn = new HashMap<>();
     private Random random = new Random();
     private Map<String, String> clientSessionRegistry = new ConcurrentHashMap<>();
@@ -58,7 +60,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private HashMap<Keys, String> map = new HashMap<>();
 
-    //private ArrayList<String> allMoves = new ArrayList<>();
+    private ArrayList<String> timeoutList = new ArrayList<>();
 
     private boolean youLose = false;
 
@@ -68,10 +70,14 @@ public class TicTacToeAImpl implements TicTacToeAService {
     private static final Semaphore semaphore = new Semaphore(2, true);
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
-        if(clientName == firstClient){
+        String tmpGameID = map.get(Keys.GAMEID);
+        String firstPlayer = map.get(Keys.PLAYER_A);
+        String secondPlayer = map.get(Keys.PLAYER_B);
 
-        } else if(clientName == secondClient){
-
+        if(clientName.equals(firstPlayer)){
+            return returnfindgameHashMap(tmpGameID, secondPlayer, "your_move");
+        } else if(clientName.equals(secondPlayer)){
+            return returnfindgameHashMap(tmpGameID, firstPlayer, "opponent_move");
         }
 
         try {
@@ -162,6 +168,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
         String opponent = map.get(Keys.PLAYER_A);
 
+        timeout = false;
         startTimer();
         return returnfindgameHashMap(gameID, opponent, "opponent_move");
     }
@@ -177,6 +184,10 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
+
+        if(timeoutList.contains(gameId)){
+            return "game_does_not_exist";
+        }
         
         boolean gameSessionExists=map.get(Keys.GAMEID).equals(gameId);
         String moves = map.get(Keys.MOVES);
@@ -206,6 +217,10 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     //makeMoveWaiting();
                     String[] moveArray = moves.split("\\|");
                     makeMoveWaiting();
+                    if(timeout){
+                        resetGameInformation();
+                        return "opponent_gone";
+                    }
                     if(moveArray.length < 9) {
                         currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                         map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
@@ -320,16 +335,17 @@ public class TicTacToeAImpl implements TicTacToeAService {
     }
 
     private void resetGameInformation() throws RemoteException {
-        System.out.println(fullUpdate(map.get(Keys.GAMEID)));
+        //System.out.println(fullUpdate(map.get(Keys.GAMEID)));
         System.out.println("Game wurde resetet");
         firstClient = "";
         secondClient = "";
         lastMove="";
         map.clear();
+        stopTimer();
 
         semaphore.release();
         semaphore.release();
-        System.out.println("Anzahl der Semapore ist jetzt: " + semaphore.availablePermits() );
+        //System.out.println("Anzahl der Semapore ist jetzt: " + semaphore.availablePermits() );
     }
 
 
@@ -345,14 +361,15 @@ public class TicTacToeAImpl implements TicTacToeAService {
             @Override
             public void run() {
                 System.out.println("Timer expired. Clearing players.");
-                try {
-                    resetGameInformation();
-                } catch (RemoteException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                timeout = true;
+                String currentTmpID = map.get(Keys.GAMEID);
+                timeoutList.add(currentTmpID);
+                synchronized (lock) {
+
+                    lock.notify();
                 }
             }
-        }, 10000);
+        }, 20000);
     }
     private void resetTimer() {
         // Reset the timer when makeMove is called.

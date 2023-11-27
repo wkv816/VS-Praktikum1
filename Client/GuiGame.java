@@ -39,11 +39,7 @@ public class GuiGame implements ActionListener{
         this.firstMove = firstMove;
         this.move = move;
         creatGUI();
-        // ArrayList update = tttAService.fullUpdate
-        // if !update.isempty()
-        //      dann Updates auf die Gui packen
-        // wenn es == empty
-        // hier den rest ausführen
+
 
         System.out.println("firstMove: " + firstMove);
         firstPlayer(firstMove);
@@ -56,18 +52,79 @@ public class GuiGame implements ActionListener{
             secondPlayer = name;
         }
 
-        /*if(!currentGameField.isEmpty()){
-            //TODO Das Gamefield auf die GUI bringen
-            // Name Prüfen am ende des Stings und das Zeichen suchen
-            // Erster spieler hat hier immer ein "X"
+        ArrayList<String> update = tttAService.fullUpdate(gameID);
 
-        }else*/ if(!move.equals("")) {
+        if(1 < update.size()){
+            waitForMyTurn(update);
+        }else if(!move.equals("")) {
             int x = Integer.parseInt(move.substring(0,1));
             int y = Integer.parseInt(move.substring(2,3));
-            System.out.println(" x: " + x + " und y: " +y);
+            //System.out.println(" x: " + x + " und y: " +y);
             playerMove(x,y,!isFirstPlayer);
         }
 
+    }
+
+    private void waitForMyTurn(ArrayList<String> update) throws RemoteException {
+        setEnabledAllButtons(false);
+        updateField(update);
+
+        while(true) {
+
+            String lastPlaerMove = update.get(update.size() - 1);
+            String playerName = lastPlaerMove.substring(0, lastPlaerMove.length() - 5);
+
+
+            if (update.get(update.size() - 1).startsWith("winner")) {
+                lastPlaerMove = update.get(update.size() - 2);
+                playerName = lastPlaerMove.substring(0, lastPlaerMove.length() - 5);
+
+                String cordinate = lastPlaerMove.substring(lastPlaerMove.length() - 3);
+                int x = Integer.parseInt(cordinate.substring(0, 1));
+                int y = Integer.parseInt(cordinate.substring(2, 3));
+
+                if (name.equals(playerName)) {
+                    textfield.setText("you_win: " + x + "," + y);
+                } else {
+                    textfield.setText("you_lose: " + x + "," + y);
+                }
+                break;
+            } else if (opponent_name.equals(playerName)) {
+                String cordinate = lastPlaerMove.substring(lastPlaerMove.length() - 3);
+                int x = Integer.parseInt(cordinate.substring(0, 1));
+                int y = Integer.parseInt(cordinate.substring(2, 3));
+                playerMove(x,y,!isFirstPlayer);
+                setEnabledAllButtons(true);
+                break;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            update = tttAService.fullUpdate(gameID);
+            if(update.isEmpty()){
+                textfield.setText("opponent_gone");
+                break;
+            }
+        }
+    }
+
+    private void updateField(ArrayList<String> playMoveList){
+
+        for(String playMove: playMoveList){
+            String cordinate = playMove.substring(playMove.length() - 3);
+            int x = Integer.parseInt(cordinate.substring(0,1));
+            int y = Integer.parseInt(cordinate.substring(2,3));
+
+            String playerName = playMove.substring(0, playMove.length() - 5);
+            System.out.println("PlayerName: " + playerName);
+            if(firstPlayer.equals(playerName)){
+                playerMove(x,y,true);
+            } else{
+                playerMove(x,y,false);
+            }
+        }
     }
 
 
@@ -128,23 +185,24 @@ public class GuiGame implements ActionListener{
             switch (opponentAwnser){
                 case "opponent_gone": // Spiel ist zu ende
                     System.out.println("opponentAwnser: 'opponent_gone'");
+                    textfield.setText("opponent_gone");
+                    return;
                     //frame.dispose(); // Beendet die GUI
-                    break;
+                    //break;
                 //case "you_win": // Spiel ist zu ende
                 //case "you_lose": // Spiel ist zu ende
                 case "invalid_move":
                     System.out.println("opponentAwnser: 'invalid_move'");
+                    return;
+                case "game_does_not_exist":
+                    System.out.println("game_does_not_exist");
+                    textfield.setText("game_does_not_exist - maybe timeout");
+                    return;
                 default:
-
                     int x=Character.getNumericValue(opponentAwnser.charAt(0));
                     int y=Character.getNumericValue(opponentAwnser.charAt(2));
-
-                    System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"
-                    +Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
-                    //Thread thread = new Thread(() -> {
-                        playerMove(x,y,!isFirstPlayer);
-                    //});
-
+                   // System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"+Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
+                    playerMove(x,y,!isFirstPlayer);
             }
             setEnabledAllButtons(true);
             // hier muss dann auf die antwort des des gegners gewartet werden
