@@ -43,7 +43,6 @@ public class GuiGame implements ActionListener{
 
         System.out.println("firstMove: " + firstMove);
         firstPlayer(firstMove);
-        ArrayList<String> currentGameField = ticTacToeAService.fullUpdate(gameID);
         if(firstMove.equals("your_move")){
             firstPlayer = name;
             secondPlayer = opponent_name;
@@ -151,15 +150,18 @@ public class GuiGame implements ActionListener{
 
     private void playerMove(int i, int j,boolean bool){
         String playerturn="";
-
         if (bool) {
-            buttons[i][j].setForeground(new Color(255, 0, 0));
-            buttons[i][j].setText("X");
+            if(buttons[i][j].getText().isEmpty()) {
+                buttons[i][j].setForeground(new Color(255, 0, 0));
+                buttons[i][j].setText("X");
+            }
             playerturn=secondPlayer;
         } else {
-            buttons[i][j].setForeground(new Color(0, 0, 255));
-            buttons[i][j].setText("O");
-            playerturn=firstPlayer;
+            if(buttons[i][j].getText().isEmpty()) {
+                buttons[i][j].setForeground(new Color(0, 0, 255));
+                buttons[i][j].setText("O");
+            }
+            playerturn = firstPlayer;
         }
         textfield.setText("PN="+ name + " "+"ON= "+ opponent_name +
                 " Turn= "+ playerturn);
@@ -184,25 +186,27 @@ public class GuiGame implements ActionListener{
             }
             switch (opponentAwnser){
                 case "opponent_gone": // Spiel ist zu ende
-                    System.out.println("opponentAwnser: 'opponent_gone'");
+                    //System.out.println("opponentAwnser: 'opponent_gone'");
                     textfield.setText("opponent_gone");
                     return;
                     //frame.dispose(); // Beendet die GUI
-                    //break;
-                //case "you_win": // Spiel ist zu ende
-                //case "you_lose": // Spiel ist zu ende
                 case "invalid_move":
                     System.out.println("opponentAwnser: 'invalid_move'");
                     return;
                 case "game_does_not_exist":
-                    System.out.println("game_does_not_exist");
+                    //System.out.println("game_does_not_exist");
                     textfield.setText("game_does_not_exist - maybe timeout");
                     return;
                 default:
                     int x=Character.getNumericValue(opponentAwnser.charAt(0));
                     int y=Character.getNumericValue(opponentAwnser.charAt(2));
+
                    // System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"+Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
                     playerMove(x,y,!isFirstPlayer);
+                    if(tttAService.fullUpdate(gameID).size() == 9){
+                        textfield.setText("Draw");
+                        return;
+                    }
             }
             setEnabledAllButtons(true);
             // hier muss dann auf die antwort des des gegners gewartet werden

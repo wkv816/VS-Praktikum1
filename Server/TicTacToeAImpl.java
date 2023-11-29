@@ -66,6 +66,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private boolean thisPlayerFirst = false;
 
+    private boolean isDraw = false;
+
 
     private static final Semaphore semaphore = new Semaphore(2, true);
     @Override
@@ -88,16 +90,15 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
                 if (firstClient.isEmpty()) {
                     firstClient = clientName;
-                    thisPlayerFirst = random.nextBoolean();
                     //thisPlayerFirst = true;
                     doWhile(false);
                     System.out.println(firstClient+ " started Gui");
                 } else if (secondClient.isEmpty()) {
                     secondClient = clientName;
-                    boolean randomBoolean= random.nextBoolean();
-                    randomBoolean=false;
+                    thisPlayerFirst = random.nextBoolean();
+                    //randomBoolean=false;
 
-                    if(randomBoolean){
+                    if(thisPlayerFirst){
                         map.put(Keys.PLAYER_A, firstClient);
                         map.put(Keys.PLAYER_B, secondClient);
                         //System.out.println(secondClient+ " gewartet");
@@ -160,11 +161,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
         String firstPlayer = map.get(Keys.PLAYER_A);
         String secondPlayer = map.get(Keys.PLAYER_B);
 
-        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer; // TODO brauchen wir das noch
+        String currentPlayer = thisPlayerFirst ? firstPlayer : secondPlayer;
         String firstMove = "opponent_move";
-        map.put(Keys.GAMESTATUS, gameStatus); // TODO brauchen wir das noch
+        map.put(Keys.GAMESTATUS, gameStatus);
         map.put(Keys.CURRENTPLAYERSTURN, currentPlayer);
-        map.put(Keys.FRISTMOVE, firstMove); // TODO brauchen wir das noch
+        map.put(Keys.FRISTMOVE, firstMove);
 
         String opponent = map.get(Keys.PLAYER_A);
 
@@ -204,6 +205,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     map.put(Keys.MOVES, moves);
                     System.out.println(moves);
                     // check if game is over
+                    String[] moveArray = moves.split("\\|");
                     if (isGameOver(moves)) {
                         System.out.println( "game over lastmove = " + lastMove);
                         youLose = true;
@@ -212,16 +214,22 @@ public class TicTacToeAImpl implements TicTacToeAService {
                         currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                         map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
                         return "you_win: " + x + "," + y;
+                    } else if(8 < moveArray.length ) {
+                        isDraw = true;
+                        lock.notify();
+                        map.put(Keys.WINNER, currentplayerturn);
+                        currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
+                        map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
+                        return lastMove;
                     }
 
                     //makeMoveWaiting();
-                    String[] moveArray = moves.split("\\|");
                     makeMoveWaiting();
                     if(timeout){
                         resetGameInformation();
                         return "opponent_gone";
                     }
-                    if(moveArray.length < 9) {
+                    if(!isDraw) {
                         currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
                         map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
                         //System.out.println("youtlose = " + youLose);
@@ -232,9 +240,12 @@ public class TicTacToeAImpl implements TicTacToeAService {
                             return loseText;
                         }
                         return lastMove;
+                    } else {
+                        // map.put(Keys.WINNER, "draw");
+                        resetGameInformation();
+                        return lastMove;
                     }
-                    map.put(Keys.WINNER, "draw");
-                    return "you_lose: " + x + "," + y;
+                    // return "you_lose: " + x + "," + y;
                 } else {
                     return "invalid_move";
                 }
@@ -340,6 +351,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         firstClient = "";
         secondClient = "";
         lastMove="";
+        isDraw =false;
         map.clear();
         stopTimer();
 
@@ -369,7 +381,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     lock.notify();
                 }
             }
-        }, 20000);
+        }, 40000);
     }
     private void resetTimer() {
         // Reset the timer when makeMove is called.
