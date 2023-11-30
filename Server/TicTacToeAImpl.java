@@ -15,6 +15,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
     private boolean timeout = false;
 
     private HashMap<String, Boolean> currentPlayerTurn = new HashMap<>();
+    private HashMap<String, ArrayList<String>> gameHistory = new HashMap<>();
     private Random random = new Random();
     private Map<String, String> clientSessionRegistry = new ConcurrentHashMap<>();
     public enum Keys {
@@ -242,8 +243,9 @@ public class TicTacToeAImpl implements TicTacToeAService {
                         return lastMove;
                     } else {
                         // map.put(Keys.WINNER, "draw");
+                        String tmpLastMove = lastMove;
                         resetGameInformation();
-                        return lastMove;
+                        return tmpLastMove;
                     }
                     // return "you_lose: " + x + "," + y;
                 } else {
@@ -257,7 +259,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         try {
             lock.notify();
             lock.wait();
-            System.out.println("Wait verlassen");
+            //System.out.println("Wait verlassen");
         } catch (InterruptedException e) {
             // Handle InterruptedException
         }
@@ -267,6 +269,9 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public ArrayList<String> fullUpdate(String gameId) throws RemoteException {
+        if(gameHistory.containsKey(gameId)){
+            return gameHistory.get(gameId);
+        }
         String player_A=map.get(Keys.PLAYER_A);
         String player_B=map.get(Keys.PLAYER_B);
         boolean tmpbool = true;
@@ -346,8 +351,13 @@ public class TicTacToeAImpl implements TicTacToeAService {
     }
 
     private void resetGameInformation() throws RemoteException {
+        String tmpGameID = map.get(Keys.GAMEID);
+        if(!timeoutList.contains(tmpGameID)){
+            ArrayList<String> gameMoves = fullUpdate(tmpGameID);
+            gameHistory.put(tmpGameID, gameMoves);
+        }
         //System.out.println(fullUpdate(map.get(Keys.GAMEID)));
-        System.out.println("Game wurde resetet");
+        System.out.println("Game wurde beendet");
         firstClient = "";
         secondClient = "";
         lastMove="";
@@ -366,7 +376,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
         if (timer != null) {
             timer.cancel();
         }
-        System.out.println("Timer started.");
+        //System.out.println("Timer started.");
 
         timer = new Timer();
         timer.schedule(new TimerTask() {

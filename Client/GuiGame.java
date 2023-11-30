@@ -171,6 +171,7 @@ public class GuiGame implements ActionListener{
         try {
             setEnabledAllButtons(false);
             String opponentAwnser;
+            System.out.println("My Mover = " + i +"," +j);
             opponentAwnser = tttAService.makeMove(i, j,gameID);
             System.out.println("opponent Answer = " + opponentAwnser);
 
@@ -203,7 +204,10 @@ public class GuiGame implements ActionListener{
 
                    // System.out.println(Character.getNumericValue(opponentAwnser.charAt(0))+" hihi"+Character.getNumericValue(opponentAwnser.charAt(2))+"  " + opponentAwnser);
                     playerMove(x,y,!isFirstPlayer);
-                    if(tttAService.fullUpdate(gameID).size() == 9){
+                    int gameSize = tttAService.fullUpdate(gameID).size();
+                    System.out.println("Gamesize = " + gameSize);
+                    // TODO selber zählen
+                    if(gameSize == 9){
                         textfield.setText("Draw");
                         return;
                     }
