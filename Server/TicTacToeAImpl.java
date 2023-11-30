@@ -2,10 +2,15 @@ package Server;
 
 
 import Regestry.TicTacToeAService;
+
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class TicTacToeAImpl implements TicTacToeAService {
 
@@ -18,40 +23,11 @@ public class TicTacToeAImpl implements TicTacToeAService {
     private HashMap<String, ArrayList<String>> gameHistory = new HashMap<>();
     private Random random = new Random();
     private Map<String, String> clientSessionRegistry = new ConcurrentHashMap<>();
-    public enum Keys {
-        GAMESTATUS,
-        GAMEID,
-        FRISTMOVE,
-        MOVES,
-        PLAYER_A,
-        PLAYER_B,
-        WINNER,
-        CURRENTPLAYERSTURN,
-    }
-    /*) 
-     * public enum Values {
-            WAITINGFORPLAYER,
-            PLAYING,
-            YOURMOVE,
-            OPPONENTMOVE,
-            NOOPPONENTFOUND,
-        }
-     */
+    public enum Keys {GAMESTATUS, GAMEID, FRISTMOVE, MOVES, PLAYER_A, PLAYER_B, WINNER, CURRENTPLAYERSTURN}
 
+    Logger logger = Logger.getLogger(TicTacToeAImpl.class.getName());
+    FileHandler fileHandler;
 
-
-
-    // Game ID:                 "Game" + random number
-    // Status:                  "waiting-for-player" | "playing"
-    // First move:              "your_move" | "opponent_move" | "no_opponent_found"
-    // Move:                    "playerX = x,y"
-    // First player:            "player 1"
-    // Second player:           "player 2"
-    // Winner:                  "you_win: x,y" | "you_lose: x,y" | "no_winner"
-    // Current Player Turn:     "playerX"
-
-
-    // "Game ID", "Opponent Name", "First Move", "Move"
 
     private final Object lock = new Object();
 
@@ -69,19 +45,48 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     private boolean isDraw = false;
 
+    public TicTacToeAImpl(){
+        // Set up a file handler to write logs to a file named "logfile.log"
+        try {
+            fileHandler= new FileHandler("logfile.log");
+            // Set the formatter for the file handler
+            SimpleFormatter formatter = new SimpleFormatter();
+            fileHandler.setFormatter(formatter);
+            // Add the file handler to the logger
+            logger.addHandler(fileHandler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        logger.info("server started");
+
+    }
+
+
+
 
     private static final Semaphore semaphore = new Semaphore(2, true);
     @Override
     public HashMap<String, String> findGame(String clientName) throws RemoteException {
+        logger.info(clientName + " wants to play TicTacToe");
+
         String tmpGameID = map.get(Keys.GAMEID);
         String firstPlayer = map.get(Keys.PLAYER_A);
         String secondPlayer = map.get(Keys.PLAYER_B);
 
         if(clientName.equals(firstPlayer)){
+            logger.info("Reconnect the player " + clientName );
             return returnfindgameHashMap(tmpGameID, secondPlayer, "your_move");
         } else if(clientName.equals(secondPlayer)){
+            logger.info("Reconnect the player " + clientName );
             return returnfindgameHashMap(tmpGameID, firstPlayer, "opponent_move");
         }
+
+        if(clientName.equals(firstClient)){
+            logger.info("This name already exists " + clientName );
+            return returnfindgameHashMap(tmpGameID, firstPlayer, "no_opponent_found");
+        }
+
+
 
         try {
             // Bevor die hier hin kommen sollen die von sowas wie einem Semaphor oder so blockiert werden
@@ -90,10 +95,10 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 boolean iAmSecond;
 
                 if (firstClient.isEmpty()) {
+                    logger.info(clientName + " is waiting for an opponent to join");
                     firstClient = clientName;
                     //thisPlayerFirst = true;
                     doWhile(false);
-                    System.out.println(firstClient+ " started Gui");
                 } else if (secondClient.isEmpty()) {
                     secondClient = clientName;
                     thisPlayerFirst = random.nextBoolean();
@@ -108,21 +113,21 @@ public class TicTacToeAImpl implements TicTacToeAService {
                         map.put(Keys.PLAYER_A, secondClient);
                         map.put(Keys.PLAYER_B, firstClient);
                     }
-                    System.out.println(secondClient+ " started Gui");
+                    //System.out.println(secondClient+ " started Gui");
                 }
+
 
                 // Der, der als zweites das wait Verlässt kommt immer hier entlang
                 if (map.containsKey(Keys.GAMEID)) {
                     return addSecondPlayer(clientName);
                 }
-                System.out.println("\nStart New Gaame ");
-                //Der, der als erstes das wait verlässt, kommt immer hier entlang
+
                 return addfirstPlayer(clientName);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
-            //TODO hier das finally befüllen
+
         }
     }
     private void doWhile(boolean thisPlayerFirst){
@@ -136,14 +141,14 @@ public class TicTacToeAImpl implements TicTacToeAService {
         } while (thisPlayerFirst);
     }
     private HashMap<String,String> addfirstPlayer(String clientName){
+
         //Der, der als erstes das wait verlässt, kommt immer hier entlang
         String gameId = generateGameId();
         String gameStatus= "waiting-for-player";
         String firstMove= "";
-
+        logger.info("Start new Game : Gameid: " + gameId + " with " + firstClient + " and " + secondClient);
         // Create a new Hashmap session with following values
         map.put(Keys.GAMESTATUS, gameStatus);
-        System.out.println("gameid = "+gameId);
         map.put(Keys.GAMEID, gameId);
         map.put(Keys.FRISTMOVE, firstMove);
         map.put(Keys.MOVES, "");
@@ -158,7 +163,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
         String gameStatus = "playing";
         String gameID = map.get(Keys.GAMEID);
-        System.out.println("\n ==================== \n  Start new Game : Gameid: " + gameID + " \n==================== \n");
+        //System.out.println("\n ==================== \n  Start new Game : Gameid: " + gameID + " \n==================== \n");
         String firstPlayer = map.get(Keys.PLAYER_A);
         String secondPlayer = map.get(Keys.PLAYER_B);
 
@@ -186,6 +191,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
 
     @Override
     public String makeMove(int x, int y, String gameId) throws RemoteException {
+        logger.info("Game-ID[" + gameId + "] Recived move: " + x + "," + y);
 
         if(timeoutList.contains(gameId)){
             return "game_does_not_exist";
@@ -204,16 +210,17 @@ public class TicTacToeAImpl implements TicTacToeAService {
                 if (isMoveValid(x, y, moves)) {
                     moves=(moves.isEmpty())?  x + "," + y: moves + "|"+ x + "," + y;
                     map.put(Keys.MOVES, moves);
-                    System.out.println(moves);
+                    //System.out.println(moves);
                     // check if game is over
                     String[] moveArray = moves.split("\\|");
                     if (isGameOver(moves)) {
-                        System.out.println( "game over lastmove = " + lastMove);
                         youLose = true;
                         lock.notify();
                         map.put(Keys.WINNER, currentplayerturn);
                         currentplayerturn = currentplayerturn.equals(firstPlayer) ? secondPlayer : firstPlayer;
+                        logger.info( currentplayerturn + "Wins with the lastmove = " + lastMove);
                         map.put(Keys.CURRENTPLAYERSTURN, currentplayerturn);
+                        logger.info("Send you_win to " + currentplayerturn);
                         return "you_win: " + x + "," + y;
                     } else if(8 < moveArray.length ) {
                         isDraw = true;
@@ -228,6 +235,7 @@ public class TicTacToeAImpl implements TicTacToeAService {
                     makeMoveWaiting();
                     if(timeout){
                         resetGameInformation();
+                        logger.info("Send opponent_gone");
                         return "opponent_gone";
                     }
                     if(!isDraw) {
@@ -237,21 +245,28 @@ public class TicTacToeAImpl implements TicTacToeAService {
                         if(youLose){
                             youLose = false;
                             String loseText= "you_lose: " + lastMove;
+                            logger.info("Send you_lose to " + currentplayerturn);
                             resetGameInformation();
                             return loseText;
                         }
+                        logger.info("Send move to " +currentplayerturn+ ": " + lastMove);
                         return lastMove;
                     } else {
                         // map.put(Keys.WINNER, "draw");
+                        logger.info("draw");
+                        System.out.println("rrcdefrtvumjio,kp.ldgdggdgddggdgd");
                         String tmpLastMove = lastMove;
                         resetGameInformation();
                         return tmpLastMove;
                     }
                     // return "you_lose: " + x + "," + y;
                 } else {
+                    logger.info("invalid_move");
                     return "invalid_move";
                 }
-            }return "game_does_not_exist";
+            }
+            logger.info("game_does_not_exist");
+            return "game_does_not_exist";
         }
     }
 
@@ -357,7 +372,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
             gameHistory.put(tmpGameID, gameMoves);
         }
         //System.out.println(fullUpdate(map.get(Keys.GAMEID)));
-        System.out.println("Game wurde beendet");
+        logger.info("Game has endet");
+        //System.out.println("Game wurde beendet");
         firstClient = "";
         secondClient = "";
         lastMove="";
@@ -382,7 +398,8 @@ public class TicTacToeAImpl implements TicTacToeAService {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Timer expired. Clearing players.");
+                //System.out.println("Timer expired. Clearing players.");
+                logger.info("******* Timeout ******");
                 timeout = true;
                 String currentTmpID = map.get(Keys.GAMEID);
                 timeoutList.add(currentTmpID);
@@ -407,12 +424,6 @@ public class TicTacToeAImpl implements TicTacToeAService {
             timer.cancel();
         }
     }
-
-
-
-
-
-
 
 
 

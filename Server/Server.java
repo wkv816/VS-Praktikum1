@@ -12,7 +12,8 @@ public class Server{
     /**
      * ipaddress is used if the host and client are not in the same network.
      */
-    private static final String ipaddress = "192.168.xxx.xxx"; //TODO IP-Adresse vom anderen Rechner
+    //private static final String ipaddress = "192.168.18.136"; //TODO IP-Adresse vom anderen Rechner
+    //private static final String ipaddress = "172.16.1.14"; //TODO IP-Adresse vom anderen Rechner
     private static final int port = 1099;
 
     public static void main(String[] args) {
@@ -24,7 +25,7 @@ public class Server{
             System.out.println("server started");
 
             // Set hostname for the server using java Property.
-            //System.setProperty("java.rmi.server.hostname", ipaddress);
+            //System.setProperty("java.rmi.server.hostname",ipaddress);
 
             TicTacToeAImpl ticTacToeAImpl_obj= new TicTacToeAImpl();
             TicTacToeAService stubTicTacToeA= (TicTacToeAService) UnicastRemoteObject.exportObject(ticTacToeAImpl_obj,0);

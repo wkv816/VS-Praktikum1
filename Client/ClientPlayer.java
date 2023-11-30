@@ -13,8 +13,9 @@ public class ClientPlayer {
     private static final int port = 1099;
 
     private String serverIP = "localhost";
-    //private String serverIP = "192.168.18.135";
+    //private String serverIP = "192.168.18.136";
     //private String serverIP = "141.22.27.111";
+    //private String serverIP = "172.16.1.14";
     public ClientPlayer(String name) {
         this.name = name;
         startplayer();

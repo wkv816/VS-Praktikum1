@@ -32,6 +32,11 @@ public class GuiGame implements ActionListener{
 
     public GuiGame(TicTacToeAService ticTacToeAService,String name, String gameID, String opponentName, String firstMove, String move) throws RemoteException {
 
+        if(firstMove.equals("no_opponent_found")){
+            System.out.println("no_opponent_found");
+            return;
+        }
+
         tttAService = ticTacToeAService;
         this.name = name;
         this.gameID = gameID;
@@ -98,6 +103,7 @@ public class GuiGame implements ActionListener{
             }
             try {
                 Thread.sleep(1000);
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
